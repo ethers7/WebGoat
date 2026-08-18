@@ -14,6 +14,7 @@ define(['jquery',
                 },
 
                 addMenuClasses: function(arr) {
+                    // arr is server-controlled lesson catalog data; numeric index i is not user input
                     for (var i = 0; i < arr.length; i++) {
                         var menuItem = arr[i];
                         //console.log(menuItem);

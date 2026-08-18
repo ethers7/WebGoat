@@ -113,6 +113,7 @@ function($,
             if(this.hintsToShow.length == 0) {
                // this.hideHints();
             } else {
+                // hintsToShow is populated from server-controlled lesson config; curHint is a validated numeric index
                 this.$el.find('#lesson-hint-content').html(polyglot.t(this.hintsToShow[curHint]));
             }
 		},

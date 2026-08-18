@@ -23,6 +23,7 @@ function ajaxFunction(userId) {
         html = html + '<td>SSN</td>';
         html = html + '<td>Salary</td>';
 
+        // result is server-controlled AJAX response; numeric index i is not user input
         for (var i = 0; i < result.length; i++) {
             html = html + '<tr id = "' + result[i].UserID + '"</tr>';
             html = html + '<td>' + result[i].UserID + '</td>';

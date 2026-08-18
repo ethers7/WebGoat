@@ -42,6 +42,7 @@ var html = '<tr class="STATUS">' +
 function getServers(column) {
     $.get("SqlInjectionMitigations/servers?column=" + column, function (result, status) {
         $("#servers").empty();
+        // result is server-controlled AJAX response; numeric index i is not user input
         for (var i = 0; i < result.length; i++) {
             var server = html.replace('ID', result[i].id);
             var status = "success";

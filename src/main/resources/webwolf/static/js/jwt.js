@@ -3,7 +3,10 @@
         var data = {};
         var dataArray = $(this).serializeArray();
         for (var i = 0; i < dataArray.length; i++) {
-            data[dataArray[i].name] = dataArray[i].value;
+            // Guard against prototype pollution via crafted field names
+            if (dataArray[i].name !== '__proto__' && dataArray[i].name !== 'constructor' && dataArray[i].name !== 'prototype') {
+                data[dataArray[i].name] = dataArray[i].value;
+            }
         }
         return data;
     }

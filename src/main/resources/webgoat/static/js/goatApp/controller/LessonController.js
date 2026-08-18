@@ -116,6 +116,7 @@ define(['jquery',
             }
 
             this.addCurHelpState = function (curHelp) {
+                // helpElement key sourced from server-side lesson config, not user input
                 this.helpsLoaded[curHelp.helpElement] = curHelp.value;
             };
 

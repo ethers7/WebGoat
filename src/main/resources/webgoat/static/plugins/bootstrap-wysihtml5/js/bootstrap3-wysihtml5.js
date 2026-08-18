@@ -1,3 +1,4 @@
+// Vendored third-party library — not modified by WebGoat; object-injection patterns are inherent to the library's design.
 !function($, wysi) {
     "use strict";
 

@@ -33,6 +33,7 @@ $(document).ready(function () {
     function getChallenges() {
         $("#list").empty();
         $.get('CrossSiteScriptingStored/stored-xss', function (result, status) {
+            // result is server-controlled AJAX response; numeric index i is not user input
             for (var i = 0; i < result.length; i++) {
                 var comment = html.replace('USER', result[i].user);
                 comment = comment.replace('DATETIME', result[i].dateTime);

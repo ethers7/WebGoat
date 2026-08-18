@@ -49,6 +49,7 @@ function getFeedback(context) {
         url: $(context).attr("action")
     }).done( (result) => {
         if (!result) return;
+        // result is server-controlled AJAX response; numeric index i is not user input
         for(let i=0; i<result.length; i++) {
             if (result[i] === true)
                 $("#q_container .quiz_question:nth-of-type(" + (i+1) + ")").removeClass("incorrect").addClass("correct");

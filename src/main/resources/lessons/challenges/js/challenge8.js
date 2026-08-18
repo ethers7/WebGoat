@@ -6,6 +6,7 @@ $(document).ready(function () {
 function loadVotes() {
     $.get("challenge/8/votes/", function (votes) {
             var totalVotes = 0;
+            // votes is server-controlled AJAX response; numeric index i is not user input
             for (var i = 1; i <= 5; i++) {
                 totalVotes = totalVotes + votes[i];
             }

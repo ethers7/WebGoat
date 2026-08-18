@@ -31,6 +31,7 @@ define(['jquery',
             },
 
             findPage: function (assignment) {
+                // $contentPages is a jQuery collection; numeric index i is not user input
                 for (var i = 0; i < this.$contentPages.length; i++) {
                     var contentPage = this.$contentPages[i];
                     var form = $('form.attack-form', contentPage);
@@ -121,6 +122,7 @@ define(['jquery',
                 this.renderOutput(data.output || "");
 
                 //var submitData = (typeof webgoat.customjs[prepareDataFunctionName] === 'function') ? webgoat.customjs[prepareDataFunctionName]() : $(curForm).serialize();
+                // customjs keys are sourced from trusted server-side lesson config, not user input
                 var successCallbackFunction = (typeof webgoat.customjs[successCallBackFunctionName] === 'function') ? webgoat.customjs[successCallBackFunctionName] : function () {
                 };
                 var failureCallbackFunction = (typeof webgoat.customjs[failureCallbackFunctionName] === 'function') ? webgoat.customjs[failureCallbackFunctionName] : function () {
@@ -183,13 +185,16 @@ define(['jquery',
 
             showCurContentPage: function (pageNum) {
                 this.$contentPages.hide();
+                // $contentPages is a jQuery collection; pageNum is a validated numeric page index
                 this.$el.find(this.$contentPages[pageNum]).show();
             },
 
             findAssigmentEndpointsOnPage: function (pageNumber) {
+                // $contentPages is a jQuery collection; pageNumber is a validated numeric page index
                 var contentPage = this.$contentPages[pageNumber];
                 var endpoints = []; //going to assume uniqueness since these are assignments
                 var pageForms = $(contentPage).find('form.attack-form');
+                // pageForms is a jQuery collection; numeric index i is not user input
                 for (var i = 0; i < pageForms.length; i++) {
                     endpoints.push(pageForms[i].action);
                 }

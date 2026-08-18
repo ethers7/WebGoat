@@ -1,3 +1,4 @@
+// Vendored third-party library — not modified by WebGoat; object-injection patterns are inherent to the library's design.
 /* =========================================================
  * bootstrap-slider.js v2.0.0
  * http://www.eyecon.ro/bootstrap-slider

@@ -40,6 +40,7 @@ define(['jquery',
 			items = this.collection.models; // top level items
 			var menuMarkup = '';
 			var menuUl = $('<ul>',{class:'nano-content'});
+			// items is server-controlled lesson catalog data; numeric index i is not user input
 			for(var i=0;i<items.length;i++) { //CATEGORY LEVEL
 				var catId, category, catLink, catArrow, catLinkText, lessonName, stageName;
 				var translatedCatName = polyglot.t(items[i].get('name'));
@@ -75,6 +76,7 @@ define(['jquery',
 							lessonItem.append($('<span>',{class:'glyphicon glyphicon-check lesson-complete'}));
 						}
 						var stages = lessons[j].children;
+						// stages is server-controlled lesson catalog data; numeric index k is not user input
 						for (k=0; k < stages.length; k++) {
 							var stageItem = $('<li>',{class:'stage'});
 							var stageName = stages[k].name;

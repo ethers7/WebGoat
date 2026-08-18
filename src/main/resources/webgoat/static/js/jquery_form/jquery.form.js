@@ -1,3 +1,4 @@
+// Vendored third-party library — not modified by WebGoat; object-injection patterns are inherent to the library's design.
 /*!
  * jQuery Form Plugin
  * version: 3.51.0-2014.06.20
