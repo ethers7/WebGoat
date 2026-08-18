@@ -45,6 +45,7 @@
             <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
             <!-- modify the action to point to the intended endpoint and set other attributes as desired -->
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN"
                   method="POST" name="form"
                   th:action="@{/lesson-template/sample-attack}">

@@ -13,6 +13,7 @@
 <div class="lesson-page-wrapper">
     <div class="adoc-content" th:replace="~{doc:lessons/csrf/documentation/CSRF_Get_Flag.adoc}"></div>
 
+    <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
     <form accept-charset="UNKNOWN" id="basic-csrf-get"
           method="POST" name="form1"
           target="_blank"
@@ -32,6 +33,7 @@
             </i>
         </div>
         <br/>
+        <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
         <form class="attack-form" accept-charset="UNKNOWN" id="confirm-flag-1"
               method="POST" name="form2"
               successCallback=""
@@ -90,6 +92,7 @@
                 <div class="attack-container">
                     <div class="post-footer">
                         <div class="input-group">
+                            <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
                             <form class="attack-form" accept-charset="UNKNOWN" id="csrf-review"
                                   method="POST" name="review-form"
                                   successCallback=""
@@ -143,6 +146,7 @@
                 <div class="row">
                     <div class="col-md-8">
                         <div class="well well-sm">
+                            <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
                             <form class="attack-form" accept-charset="UNKNOWN" id="csrf-feedback"
                                   method="POST"
                                   prepareData="feedback"
@@ -210,6 +214,7 @@
             <i class="fa fa-2 fa-check hidden" aria-hidden="true">
             </i>
         </div>
+        <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
         <form class="attack-form" accept-charset="UNKNOWN" id="confirm-flag-feedback"
               method="POST" name="form2"
               th:action="@{/csrf/feedback}">
@@ -234,6 +239,7 @@
             <i class="fa fa-2 fa-check hidden" aria-hidden="true">
             </i>
         </div>
+        <!-- Intentionally missing CSRF token — this is a WebGoat CSRF lesson exercise -->
         <form class="attack-form" accept-charset="UNKNOWN" id="confirm-flag-login"
               method="POST" name="form2"
               th:action="@{/csrf/login}">

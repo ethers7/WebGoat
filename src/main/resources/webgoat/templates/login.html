@@ -28,6 +28,7 @@
                 <p th:text="#{logged_out}">You've been logged out successfully.</p>
             </div>
             <br/><br/>
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form th:action="@{/login}" method='POST' style="width: 200px;">
                 <div class="form-group">
                     <label for="exampleInputEmail1" th:text="#{username}">Username</label>

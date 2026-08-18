@@ -35,6 +35,7 @@
     <div class="card">
         <div class="card-body">
             <h5 class="card-title"><strong>Upload a file</strong></h5>
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form th:action="@{/fileupload}" method="post" enctype="multipart/form-data">
                 <fieldset>
                     <div class="mb-3">

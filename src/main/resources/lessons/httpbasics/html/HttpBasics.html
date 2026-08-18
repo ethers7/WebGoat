@@ -19,6 +19,7 @@
 			<!-- using attack-form class on your form will allow your request to be ajaxified and stay within the display framework for webgoat -->
             <!-- you can write your own custom forms, but standard form submission will take you to your endpoint and outside of the WebGoat framework -->
             <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
+			<!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
 			<form class="attack-form" accept-charset="UNKNOWN"
 				method="POST" name="form"
 				th:action="@{/HttpBasics/attack1}">
@@ -42,6 +43,7 @@
         <div class="adoc-content" th:replace="~{doc:lessons/httpbasics/documentation/HttpBasics_send_external.adoc}"></div>
         <div class="attack-container">
             <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN" name="intercept-request"
                   method="POST"
                   th:action="@{/HttpBasics/externalcheck}">
@@ -64,6 +66,7 @@
                 <!-- using attack-form class on your form will allow your request to be ajaxified and stay within the display framework for webgoat -->
                 <!-- you can write your own custom forms, but standard form submission will take you to your endpoint and outside of the WebGoat framework -->
                 <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
+				<!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
 				<form class="attack-form" accept-charset="UNKNOWN"
 					method="POST" name="form"
 					th:action="@{/HttpBasics/attack2}">
@@ -111,6 +114,7 @@
     <div class="attack-container">
         <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
         <div class="container-fluid">
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form id="quiz-form" class="attack-form" accept-charset="UNKNOWN"
                   method="POST" name="form"
                   th:action="@{/HttpBasics/quiz}" role="form">

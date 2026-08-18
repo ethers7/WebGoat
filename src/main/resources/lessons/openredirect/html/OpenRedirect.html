@@ -15,6 +15,7 @@
     <div class="adoc-content" th:replace="~{doc:lessons/openredirect/documentation/OpenRedirect_Task1.adoc}"></div>
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+      <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
       <form class="attack-form" method="POST" th:action="@{/OpenRedirect/task1}">
         <label for="t1url">Return URL</label>
         <input id="t1url" name="url" placeholder="https://evil.test" value="/home" size="60" />
@@ -30,6 +31,7 @@
     <div class="adoc-content" th:replace="~{doc:lessons/openredirect/documentation/OpenRedirect_Task2.adoc}"></div>
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+      <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
       <form class="attack-form" method="POST" th:action="@{/OpenRedirect/task2}">
         <label for="t2url">Return URL (substring filter active)</label>
         <input id="t2url" name="url" placeholder="https://webgoat.org.evil.com" size="60" />
@@ -45,6 +47,7 @@
     <div class="adoc-content" th:replace="~{doc:lessons/openredirect/documentation/OpenRedirect_Task3.adoc}"></div>
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+      <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
       <form class="attack-form" method="POST" th:action="@{/OpenRedirect/task3}">
         <label for="t3target">Target URL</label>
         <input id="t3target" name="target" placeholder="https://webgoat.local@evil.com" size="55" />
@@ -61,6 +64,7 @@
     <div class="adoc-content" th:replace="~{doc:lessons/openredirect/documentation/OpenRedirect_Task4.adoc}"></div>
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+      <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
       <form class="attack-form" method="POST" th:action="@{/OpenRedirect/task4}">
         <label for="t4target">Target URL (double-encoded)</label>
         <input
@@ -97,6 +101,7 @@
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
       <div class="container-fluid">
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form id="quiz-form" class="attack-form" method="POST" th:action="@{/OpenRedirect/quiz}" role="form">
           <div id="q_container"></div>
           <br />
@@ -113,6 +118,7 @@
     <div class="attack-container">
       <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
       <!-- Mitigation verification assignment -->
+      <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
       <form class="attack-form" method="POST" th:action="@{/OpenRedirect/mitigation}">
         <label for="mitigationUrl">External URL to test mitigation</label>
         <input id="mitigationUrl" name="url" placeholder="https://evil.test" size="60" />

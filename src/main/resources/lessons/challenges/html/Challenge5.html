@@ -23,6 +23,7 @@
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-lg-12">
+                                    <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
                                     <form id="login-form" class="attack-form" accept-charset="UNKNOWN"
                                           method="POST" name="form"
                                           th:action="@{/challenge/5}" role="form">
@@ -66,6 +67,7 @@
             </div>
         </div>
         <br/>
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" method="POST" name="form" th:action="@{/challenge/flag/5}">
             <div class="form-group">
                 <div class="input-group">

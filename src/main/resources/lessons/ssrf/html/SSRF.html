@@ -10,6 +10,7 @@
         <div class="adoc-content" th:replace="~{doc:lessons/ssrf/documentation/SSRF_Task1.adoc}"></div>
         <div class="attack-container">
             <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN"
                   method="POST" name="form"
                   th:action="@{/SSRF/task1}">
@@ -32,6 +33,7 @@
         <div class="adoc-content" th:replace="~{doc:lessons/ssrf/documentation/SSRF_Task2.adoc}"></div>
         <div class="attack-container">
             <div class="assignment-success"><i class="fa fa-2 fa-check hidden" aria-hidden="true"></i></div>
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN"
                   method="POST" name="form"
                   th:action="@{/SSRF/task2}">

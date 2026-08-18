@@ -12,6 +12,7 @@
                     <img th:src="@{/challenge/logo}" class="img-thumbnail"/>
                 </div>
                 <div class="panel-body">
+                    <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
                     <form class="attack-form" accept-charset="UNKNOWN"
                           method="POST" name="form"
                           th:action="@{/challenge/1}"
@@ -34,6 +35,7 @@
             </div>
         </div>
 
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" method="POST" name="form" th:action="@{/challenge/flag/1}">
             <div class="form-group">
                 <div class="input-group">

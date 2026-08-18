@@ -20,6 +20,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" accept-charset="UNKNOWN"
               method="POST" name="form"
               th:action="@{/IDOR/login}">
@@ -55,6 +56,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" accept-charset="UNKNOWN"
               method="GET" name="form"
               th:action="@{/IDOR/profile}">
@@ -78,6 +80,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
         <div class="adoc-content" th:replace="~{doc:lessons/idor/documentation/IDOR_whatDiffs.adoc}"></div>
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form"
               method="POST" name="diff-form"
               th:action="@{/IDOR/diff-attributes}">
@@ -105,6 +108,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" accept-charset="UNKNOWN"
               method="POST" name="form"
               th:action="@{/IDOR/profile/alt-path}">
@@ -132,6 +136,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" accept-charset="UNKNOWN" id="view-other"
               method="GET" name="view-other-profile"
               th:action="@{/IDOR/profile/{userId}}">
@@ -156,6 +161,7 @@
         <!-- of course, you can write your own ajax submission /handling in your own javascript if you like -->
 
         <!-- modify the action to point to the intended endpoint -->
+        <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
         <form class="attack-form" accept-charset="UNKNOWN" id="edit-other"
               method="GET" name="edit-other-profile"
               th:action="@{/IDOR/profile/{userId}}">

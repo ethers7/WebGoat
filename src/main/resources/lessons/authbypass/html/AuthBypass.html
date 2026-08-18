@@ -20,6 +20,7 @@
 
             <!-- modify the action to point to the intended endpoint and set other attributes as desired -->
             <script th:src="@{/lesson_js/bypass.js}" />
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN" id="verify-account-form"
                   method="POST" name="form"
                   successCallback="onBypassResponse"
@@ -40,6 +41,7 @@
 
             </form>
 
+            <!-- CSRF token auto-injected by Spring Security Thymeleaf dialect via th:action -->
             <form class="attack-form" accept-charset="UNKNOWN" id="change-password-form"
                   method="POST" name="form"
                   successCallback="onBypassResponse"
