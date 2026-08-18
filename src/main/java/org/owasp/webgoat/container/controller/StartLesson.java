@@ -32,6 +32,10 @@ public class StartLesson {
         .findFirst()
         .ifPresent(
             lesson -> {
+              // `lesson` is resolved from the trusted server-side course catalog
+              // by matching the URL path segment against known lesson IDs.
+              // Only a valid catalog object reaches the request attribute; raw
+              // user input is never stored here (ifPresent guards null / no-match).
               request.setAttribute("lesson", lesson);
             });
 

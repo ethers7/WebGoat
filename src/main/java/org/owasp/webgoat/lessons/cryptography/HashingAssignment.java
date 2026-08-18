@@ -41,6 +41,8 @@ public class HashingAssignment implements AssignmentEndpoint {
       md.update(secret.getBytes());
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
+      // md5Hash and md5Secret are both server-generated from the static SECRETS
+      // array — no user-controlled input reaches the session here.
       request.getSession().setAttribute("md5Hash", md5Hash);
       request.getSession().setAttribute("md5Secret", secret);
     }
@@ -55,6 +57,8 @@ public class HashingAssignment implements AssignmentEndpoint {
     if (sha256 == null) {
       String secret = SECRETS[new Random().nextInt(SECRETS.length)];
       sha256 = getHash(secret, "SHA-256");
+      // sha256Hash and sha256Secret are both server-generated from the static
+      // SECRETS array — no user-controlled input reaches the session here.
       request.getSession().setAttribute("sha256Hash", sha256);
       request.getSession().setAttribute("sha256Secret", secret);
     }
