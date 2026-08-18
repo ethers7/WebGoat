@@ -50,10 +50,19 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
     this.comments = comments;
   }
 
-  private void createSecretFileWithRandomContents(WebGoatUser user) {
+  private void createSecretFileWithRandomContents(WebGoatUser user) throws IOException {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    var baseDirectory = new File(webGoatHomeDirectory, "/XXE/");
+    File targetDirectory = new File(baseDirectory, user.getUsername());
+    // Validate that the resolved target directory stays within the XXE base directory to
+    // prevent directory traversal via a crafted username.
+    var canonicalBase = baseDirectory.getCanonicalPath();
+    var canonicalTarget = targetDirectory.getCanonicalPath();
+    if (!canonicalTarget.startsWith(canonicalBase + File.separator)
+        && !canonicalTarget.equals(canonicalBase)) {
+      throw new IOException("Path traversal attempt detected in username: " + canonicalTarget);
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }
@@ -91,6 +100,10 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   public void initialize(WebGoatUser user) {
     comments.reset(user);
     userToFileContents.remove(user);
-    createSecretFileWithRandomContents(user);
+    try {
+      createSecretFileWithRandomContents(user);
+    } catch (IOException e) {
+      log.error("Unable to create secret file for user '{}'", user.getUsername(), e);
+    }
   }
 }

@@ -97,8 +97,15 @@ public class CSRFIntegrationTest extends IntegrationTest {
 
     // remove any left over html
     Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path userDir = webWolfFilePath.resolve(this.getUser()).normalize();
+    Path targetFile = userDir.resolve(htmlName).normalize();
+    // Validate that the resolved target path stays within the expected user directory to
+    // prevent any unintended traversal via the htmlName parameter.
+    if (!targetFile.startsWith(userDir)) {
+      throw new IOException("Path traversal attempt detected: " + targetFile);
+    }
+    if (targetFile.toFile().exists()) {
+      Files.delete(targetFile);
     }
 
     // upload trick html
