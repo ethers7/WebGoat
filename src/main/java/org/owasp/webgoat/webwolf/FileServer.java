@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -85,14 +86,27 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+
+    // Sanitize the filename to prevent path traversal: strip any directory components supplied
+    // by the client so that e.g. "../../etc/passwd" becomes just "passwd".
+    String safeFilename = FilenameUtils.getName(multipartFile.getOriginalFilename());
+    if (safeFilename == null || safeFilename.isBlank()) {
+      safeFilename = "upload_" + System.currentTimeMillis();
+    }
+
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(safeFilename);
+      // Verify the resolved canonical path is still inside the user's upload directory.
+      if (!destinationFile.toFile().getCanonicalPath()
+          .startsWith(destinationDir.getCanonicalPath() + File.separator)) {
+        throw new IOException("Upload rejected: resolved path escapes the upload directory");
+      }
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", new File(destinationDir, safeFilename));
 
     return new ModelAndView(
         new RedirectView("files", true),
