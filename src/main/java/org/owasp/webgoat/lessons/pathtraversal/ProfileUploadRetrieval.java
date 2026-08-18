@@ -61,7 +61,13 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        var targetFile = new File(catPicturesDirectory, i + ".jpg");
+        var canonicalBase = catPicturesDirectory.getCanonicalPath();
+        var canonicalTarget = targetFile.getCanonicalPath();
+        if (!canonicalTarget.startsWith(canonicalBase + File.separator)) {
+          throw new IOException("Path traversal attempt detected: " + canonicalTarget);
+        }
+        FileCopyUtils.copy(is, new FileOutputStream(targetFile));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
