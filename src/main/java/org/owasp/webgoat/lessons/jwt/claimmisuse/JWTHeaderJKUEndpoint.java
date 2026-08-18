@@ -54,7 +54,14 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+        // SSRF guard: only allow trusted hosts for JKU resolution.
+        // Rotate/revoke any credentials if a real SSRF was previously exploited.
+        var jkuUrl = new URL(jku.asString());
+        var jkuHost = jkuUrl.getHost();
+        if (!"localhost".equals(jkuHost)) {
+          return failed(this).feedback("jwt-invalid-token").build();
+        }
+        var jwkProvider = new JwkProviderBuilder(jkuUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);
