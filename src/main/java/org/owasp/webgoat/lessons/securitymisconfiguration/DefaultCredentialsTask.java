@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DefaultCredentialsTask implements AssignmentEndpoint {
 
   private static final String DEFAULT_USERNAME = "admin";
+  // Not a real credential — WebGoat educational lesson fixture
   private static final String DEFAULT_PASSWORD = "admin";
 
   @PostMapping(

@@ -40,8 +40,8 @@ public class HashingAssignment implements AssignmentEndpoint {
       md.update(secret.getBytes());
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
-      request.getSession().setAttribute("md5Hash", md5Hash);
-      request.getSession().setAttribute("md5Secret", secret);
+      request.getSession().setAttribute("md5Hash", md5Hash); // NOSONAR - value is computed internally, not user-supplied input
+      request.getSession().setAttribute("md5Secret", secret); // NOSONAR - value is computed internally, not user-supplied input
     }
     return md5Hash;
   }
@@ -54,8 +54,8 @@ public class HashingAssignment implements AssignmentEndpoint {
     if (sha256 == null) {
       String secret = SECRETS[new Random().nextInt(SECRETS.length)];
       sha256 = getHash(secret, "SHA-256");
-      request.getSession().setAttribute("sha256Hash", sha256);
-      request.getSession().setAttribute("sha256Secret", secret);
+      request.getSession().setAttribute("sha256Hash", sha256); // NOSONAR - value is computed internally, not user-supplied input
+      request.getSession().setAttribute("sha256Secret", secret); // NOSONAR - value is computed internally, not user-supplied input
     }
     return sha256;
   }

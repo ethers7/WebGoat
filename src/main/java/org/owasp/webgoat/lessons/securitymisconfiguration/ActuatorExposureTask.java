@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class ActuatorExposureTask implements AssignmentEndpoint {
 
+  // Not a real credential — WebGoat educational lesson fixture (intentionally leaked for lesson)
   static final String LEAKED_API_KEY = "INTERNAL-API-KEY-987";
 
   @GetMapping(

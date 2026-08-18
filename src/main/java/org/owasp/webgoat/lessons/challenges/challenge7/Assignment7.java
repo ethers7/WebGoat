@@ -33,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
+  // Not a real credential — WebGoat educational lesson fixture
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
   // Not a real credential or sensitive URL — this is an email body template for the password-reset

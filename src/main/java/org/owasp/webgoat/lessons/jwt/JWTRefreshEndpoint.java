@@ -42,7 +42,9 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
+  // Not a real credential — WebGoat educational lesson fixture
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+  // Not a real credential — WebGoat educational lesson fixture
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 
