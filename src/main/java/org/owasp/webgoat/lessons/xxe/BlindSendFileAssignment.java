@@ -53,13 +53,12 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
     try {
-      // Canonicalize and validate that targetDirectory stays within webGoatHomeDirectory
-      File canonicalBase = new File(webGoatHomeDirectory).getCanonicalFile();
-      File canonicalTarget = targetDirectory.getCanonicalFile();
-      if (!canonicalTarget.getPath().startsWith(canonicalBase.getPath() + File.separator)
-          && !canonicalTarget.equals(canonicalBase)) {
+      // Canonicalize the base XXE directory first, then construct the user subdirectory
+      // so the File is never built from an unvalidated username path.
+      File canonicalBase = new File(webGoatHomeDirectory, "/XXE/").getCanonicalFile();
+      File targetDirectory = new File(canonicalBase, user.getUsername()).getCanonicalFile();
+      if (!targetDirectory.getPath().startsWith(canonicalBase.getPath() + File.separator)) {
         log.error("Path traversal attempt rejected for user: {}", user.getUsername());
         return;
       }
@@ -68,7 +67,7 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
       }
       Files.writeString(new File(targetDirectory, "secret.txt").toPath(), fileContents, UTF_8);
     } catch (IOException e) {
-      log.error("Unable to write 'secret.txt' to '{}", targetDirectory);
+      log.error("Unable to write 'secret.txt' for user '{}'", user.getUsername());
     }
   }
 

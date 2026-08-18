@@ -42,8 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
-  // Not real secrets — educational fixture credentials used in the JWT Refresh Token lesson exercise.
-  public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+  public static final String PASSWORD = "bm5nhSkxCXZkKRy4"; // educational fixture credential for the JWT Refresh Token lesson — not a real secret
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 

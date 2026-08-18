@@ -48,13 +48,11 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
-      // Canonicalize and validate that uploadedFile stays within uploadDirectory
+      // Canonicalize the upload directory and sanitize the filename BEFORE constructing the path
       File canonicalUploadDir = uploadDirectory.getCanonicalFile();
-      File canonicalUploadedFile = uploadedFile.getCanonicalFile();
-      if (!canonicalUploadedFile.getPath().startsWith(
-              canonicalUploadDir.getPath() + File.separator)
-          && !canonicalUploadedFile.equals(canonicalUploadDir)) {
+      String safeName = FilenameUtils.getName(fullName); // strip any path separators from user input
+      var uploadedFile = new File(canonicalUploadDir, safeName).getCanonicalFile();
+      if (!uploadedFile.getPath().startsWith(canonicalUploadDir.getPath() + File.separator)) {
         return failed(this).output("Path traversal attempt detected in filename").build();
       }
       uploadedFile.createNewFile();

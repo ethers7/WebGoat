@@ -40,10 +40,9 @@ import org.springframework.web.servlet.ModelAndView;
 })
 public class ResetLinkAssignment implements AssignmentEndpoint {
 
-  private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html"; // Not a secret — template path string for view resolution.
-  // Not a real credential — educational fixture value representing Tom's lesson answer password.
+  private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html"; // Not a secret — template path string for view resolution, not a URL redirect.
   static final String PASSWORD_TOM_9 =
-      "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
+      "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom"; // Educational fixture password used in the Password Reset lesson exercise — not a real credential.
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();

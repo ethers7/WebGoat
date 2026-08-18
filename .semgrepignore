@@ -1,0 +1,13 @@
+# Vendored third-party JavaScript libraries — excluded from SAST scanning.
+# These files are not modified by WebGoat and contain patterns that are
+# inherent to their library design (not vulnerabilities in WebGoat code).
+src/main/resources/webgoat/static/js/libs/jquery-ui-1.10.4.js
+src/main/resources/webgoat/static/plugins/bootstrap-wysihtml5/js/wysihtml5-0.3.0.js
+src/main/resources/webgoat/static/js/libs/backbone-min.js
+src/main/resources/webgoat/static/js/libs/underscore-min.js
+src/main/resources/webgoat/static/js/jquery_form/jquery.form.js
+src/main/resources/webgoat/static/js/libs/jquery.form.js
+src/main/resources/webgoat/static/plugins/bootstrap-slider/js/bootstrap-slider.js
+src/main/resources/webgoat/static/plugins/bootstrap-wysihtml5/js/bootstrap3-wysihtml5.js
+src/main/resources/webgoat/static/js/libs/text.js
+src/main/resources/webgoat/static/js/libs/mode-java.js

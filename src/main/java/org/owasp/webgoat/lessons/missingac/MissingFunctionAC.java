@@ -11,9 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MissingFunctionAC extends Lesson {
 
-  // Not real credentials — deliberately weak salt values used as educational fixtures to demonstrate insecure password storage in the Missing Function Access Control lesson.
-  public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
-  public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
+  public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234"; // Not a real credential — educational fixture salt for the Missing Function Access Control lesson.
+  public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235"; // Not a real credential — educational fixture salt for the Missing Function Access Control lesson.
 
   @Override
   public Category getDefaultCategory() {
