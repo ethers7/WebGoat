@@ -52,6 +52,8 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "<input type=\"submit\" value=\"assignment 7\"/>\n"
           + "</form></body></html>";
 
+  // Not a real credential — this is a synthetic HTML form used to simulate a CSRF attack in the
+  // CSRF lesson (educational test fixture; "password" is a placeholder form field value only)
   private static final String trickHTML8 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"username\" value=\"csrf-USERNAME\"/>\n"

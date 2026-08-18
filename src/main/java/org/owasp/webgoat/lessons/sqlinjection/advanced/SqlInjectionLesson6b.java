@@ -41,6 +41,8 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   protected String getPassword() {
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
+      // Not a real credential — this is a SQL query against the lesson's in-memory sample
+      // database used to demonstrate SQL injection techniques in the WebGoat educational environment
       String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
       try {
         Statement statement =

@@ -35,6 +35,9 @@ public class Assignment7 implements AssignmentEndpoint {
 
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
+  // Not a real credential or sensitive URL — this is an email body template for the password-reset
+  // challenge lesson; the link contains a placeholder that is populated with a generated
+  // per-request token at runtime (educational fixture, not a hardcoded secret)
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
           + " href='%s:8080/WebGoat/challenge/7/reset-password/%s'>link</a> to reset your"
