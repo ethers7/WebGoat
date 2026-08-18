@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class User {
 
   private String username = "";
-  private String password = "";
+  private String password = ""; // Not a credential — empty default field for XXE lesson XML deserialization example.
 
   public String getPassword() {
     return password;

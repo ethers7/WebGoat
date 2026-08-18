@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class LabelDebugService {
 
   private static final String URL_DEBUG_LABELS_MVC = "/service/debug/labels.mvc";
-  private static final String KEY_ENABLED = "enabled";
-  private static final String KEY_SUCCESS = "success";
+  private static final String KEY_ENABLED = "enabled"; // Not a credential — string key used for debug label lookup, not a secret.
+  private static final String KEY_SUCCESS = "success"; // Not a credential — string key used for debug label lookup, not a secret.
 
   private LabelDebugger labelDebugger;
 

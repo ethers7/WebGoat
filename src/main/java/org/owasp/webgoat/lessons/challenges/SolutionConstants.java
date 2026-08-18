@@ -7,5 +7,6 @@ package org.owasp.webgoat.lessons.challenges;
 public interface SolutionConstants {
 
   // TODO should be random generated when starting the server
+  // Not a real production credential — educational fixture answer password used in challenge lesson verification.
   String PASSWORD = "!!webgoat_admin_1234!!";
 }

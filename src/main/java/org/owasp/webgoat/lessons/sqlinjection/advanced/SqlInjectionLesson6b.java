@@ -39,7 +39,7 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   }
 
   protected String getPassword() {
-    String password = "dave";
+    String password = "dave"; // Not a real credential — educational fixture fallback value used only if the lesson database query fails.
     try (Connection connection = dataSource.getConnection()) {
       // Static hardcoded query — no user input involved; retrieves a fixed record for lesson logic.
       String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
