@@ -17,9 +17,9 @@ import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.owasp.webgoat.container.users.WebGoatUser;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -74,7 +74,7 @@ public class SimpleXXE implements AssignmentEndpoint {
     return success;
   }
 
-  @RequestMapping(
+  @GetMapping(
       path = "/xxe/sampledtd",
       consumes = ALL_VALUE,
       produces = MediaType.TEXT_PLAIN_VALUE)

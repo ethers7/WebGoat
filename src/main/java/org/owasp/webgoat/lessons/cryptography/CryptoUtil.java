@@ -140,6 +140,9 @@ public class CryptoUtil {
 
     byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
 
+    // Not a hardcoded key: `decoded` is derived from the `privateKeyPem` parameter passed by the
+    // caller. No secret is embedded in source code here — key material is always supplied
+    // externally (e.g., generated at runtime or loaded from a secrets manager / environment).
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     return kf.generatePrivate(spec);

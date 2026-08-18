@@ -129,6 +129,26 @@ class FileServerTest {
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 
+  @Test
+  @DisplayName("An arbitrary uploadSuccess value not in the allowlist is rejected and never reaches the view")
+  void shouldRejectArbitraryUploadMessage() throws Exception {
+    // An attacker-controlled uploadSuccess query-string value must not be passed
+    // to the view, so neither uploadSuccess nor uploadFailed should appear in the model.
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "<script>alert(1)</script>")
+                .principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "arbitrary attacker message")
+                .principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+  }
+
   private Path userDirectory() {
     return fileServerLocation.resolve(USERNAME);
   }
@@ -146,5 +166,28 @@ class FileServerTest {
   private MockMultipartFile testFile() {
     return new MockMultipartFile(
         "file", "test.txt", "text/plain", "test".getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  @DisplayName("Path traversal in the uploaded filename is stripped — only the base name is stored")
+  void shouldSanitizePathTraversalInFilename() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    var traversalFile =
+        new MockMultipartFile(
+            "file",
+            "../../../etc/passwd",
+            "text/plain",
+            "malicious".getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalFile).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=File+uploaded+successful"));
+
+    // Must land inside the user's own directory, not at an arbitrary path
+    Assertions.assertThat(userDirectory().resolve("passwd")).content().isEqualTo("malicious");
+    // The file must NOT have escaped the user directory
+    Assertions.assertThat(fileServerLocation.resolve("etc").resolve("passwd")).doesNotExist();
   }
 }

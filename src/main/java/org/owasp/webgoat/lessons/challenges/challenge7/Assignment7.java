@@ -33,8 +33,12 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
+  // Not a real credential — WebGoat educational lesson fixture
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
+  // Not a real credential or sensitive URL — this is an email body template for the password-reset
+  // challenge lesson; the link contains a placeholder that is populated with a generated
+  // per-request token at runtime (educational fixture, not a hardcoded secret)
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
           + " href='%s:8080/WebGoat/challenge/7/reset-password/%s'>link</a> to reset your"
@@ -59,6 +63,7 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
+    // Not a real credential — this is a WebGoat educational lesson fixture (password-reset challenge; ADMIN_PASSWORD_LINK is a static MD5 placeholder token)
     if (link.equals(ADMIN_PASSWORD_LINK)) {
       return ResponseEntity.accepted()
           .body(

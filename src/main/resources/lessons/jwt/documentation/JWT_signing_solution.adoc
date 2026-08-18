@@ -28,6 +28,7 @@ What basically happened was that libraries just parsed the token as it was given
 First note that we are logged in as `Guest` so first select a different user for example: Tom.
 User Tom is allowed to vote as you can see, but he is unable to reset the votes. Looking at the request this will return an `access_token` in the response:
 
+// NOTE: The token below is a demonstration JWT for the WebGoat JWT lesson — not a real credential
 [source]
 ----
 GET http://localhost:8080/WebGoat/JWT/votings/login?user=Tom HTTP/1.1
@@ -72,6 +73,7 @@ claims:
 
 If we use WebWolf to create our token we get:
 
+// NOTE: The token below is a demonstration JWT for the WebGoat JWT lesson — not a real credential
 [source]
 ----
 eyJhbGciOiJub25lIn0.ew0KICAiYWRtaW4iIDogInRydWUiLA0KICAiaWF0IiA6IDE2MDgxMjg1NjYsDQogICJ1c2VyIiA6ICJUb20iDQp9

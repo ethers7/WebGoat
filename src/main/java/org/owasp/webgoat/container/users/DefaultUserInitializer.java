@@ -24,6 +24,7 @@ public class DefaultUserInitializer implements ApplicationRunner {
 
   private static final String ADMIN_USERNAME = "webgoat-admin";
   private static final String DEFAULT_USER_USERNAME = "webgoat-user";
+  // Not a real credential — WebGoat educational lesson fixture
   private static final String DEFAULT_PASSWORD = "webgoat";
 
   private final UserRepository userRepository;

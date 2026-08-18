@@ -75,7 +75,7 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
         .statusCode(500)
         .body(
             "trace",
-            containsString(
+            containsString( // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
                 "select id, hostname, ip, mac, status, description from SERVERS where status <>"
                     + " 'out of order' order by"));
 

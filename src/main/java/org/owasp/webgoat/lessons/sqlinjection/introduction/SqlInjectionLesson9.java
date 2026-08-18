@@ -48,7 +48,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
     String queryInjection =
-        "SELECT * FROM employees WHERE last_name = '"
+        "SELECT * FROM employees WHERE last_name = '" // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
             + name
             + "' AND auth_tan = '"
             + auth_tan
@@ -62,7 +62,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      statement.execute(queryInjection); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
@@ -91,7 +91,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
+    ResultSet results = statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
     results.first();
     return results.getInt(1);
   }
@@ -114,6 +114,6 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    return statement.executeQuery(query);
+    return statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
   }
 }

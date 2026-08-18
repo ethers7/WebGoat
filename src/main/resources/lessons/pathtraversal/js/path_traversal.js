@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 webgoat.customjs.profileUpload = function () {
 
     var picture = document.getElementById("uploadedFile").files[0];

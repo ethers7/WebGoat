@@ -52,6 +52,8 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "<input type=\"submit\" value=\"assignment 7\"/>\n"
           + "</form></body></html>";
 
+  // Not a real credential — this is a synthetic HTML form used to simulate a CSRF attack in the
+  // CSRF lesson (educational test fixture; "password" is a placeholder form field value only)
   private static final String trickHTML8 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"username\" value=\"csrf-USERNAME\"/>\n"
@@ -97,8 +99,15 @@ public class CSRFIntegrationTest extends IntegrationTest {
 
     // remove any left over html
     Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path userDir = webWolfFilePath.resolve(this.getUser()).normalize();
+    Path targetFile = userDir.resolve(htmlName).normalize();
+    // Validate that the resolved target path stays within the expected user directory to
+    // prevent any unintended traversal via the htmlName parameter.
+    if (!targetFile.startsWith(userDir)) {
+      throw new IOException("Path traversal attempt detected: " + targetFile);
+    }
+    if (targetFile.toFile().exists()) {
+      Files.delete(targetFile);
     }
 
     // upload trick html

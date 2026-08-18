@@ -17,7 +17,7 @@ public class OpenRedirectRealRedirect {
 
   @GetMapping("/OpenRedirect/realRedirect")
   public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
-    return new ModelAndView("redirect:" + url);
+    // Intentionally vulnerable: no validation — this endpoint exists solely for the Open Redirect lesson to demonstrate unvalidated redirects
+    return new ModelAndView("redirect:" + url); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat Open Redirect lesson)
   }
 }

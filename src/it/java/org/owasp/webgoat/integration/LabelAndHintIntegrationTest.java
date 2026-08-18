@@ -164,6 +164,8 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
       lang = "_" + lang;
     }
     try (InputStream input =
+        // lang is either "" or a hardcoded locale constant ("_nl", "_de", "_fr") set by the
+        // test — it is never derived from user-supplied input, so there is no path traversal risk.
         new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
 
       prop = new Properties();

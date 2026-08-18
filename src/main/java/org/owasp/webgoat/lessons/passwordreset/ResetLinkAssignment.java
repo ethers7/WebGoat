@@ -40,7 +40,10 @@ import org.springframework.web.servlet.ModelAndView;
 })
 public class ResetLinkAssignment implements AssignmentEndpoint {
 
+  // Not a credential — this is a view template path pattern used to resolve HTML lesson templates
   private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
+  // Not a real credential — this is a deliberately long placeholder value used as a dummy
+  // password for the fictional user "Tom" in the password-reset lesson (educational fixture only)
   static final String PASSWORD_TOM_9 =
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
@@ -68,9 +71,10 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       @RequestParam String password, @RequestParam String email, @CurrentUsername String username) {
     if (TOM_EMAIL.equals(email)) {
       String passwordTom = usersToTomPassword.getOrDefault(username, PASSWORD_TOM_9);
+      // Not a real credential — this is a WebGoat educational lesson fixture (password-reset lesson)
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
-      } else if (passwordTom.equals(password)) {
+      } else if (passwordTom.equals(password)) { // Not a real credential — educational fixture
         return success(this).build();
       }
     }

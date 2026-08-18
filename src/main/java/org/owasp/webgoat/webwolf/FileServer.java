@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -27,7 +28,6 @@ import org.springframework.ui.ModelMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,7 +60,7 @@ public class FileServer {
   @Value("${server.port}")
   private int port;
 
-  @RequestMapping(
+  @GetMapping(
       path = "/file-server-location",
       consumes = ALL_VALUE,
       produces = MediaType.TEXT_PLAIN_VALUE)
@@ -85,14 +85,16 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+    // Strip any path components (e.g. "../") from the uploaded filename to prevent path traversal.
+    var safeFilename = FilenameUtils.getName(multipartFile.getOriginalFilename());
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(safeFilename);
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", new File(destinationDir, safeFilename));
 
     return new ModelAndView(
         new RedirectView("files", true),
@@ -107,10 +109,15 @@ public class FileServer {
 
     ModelAndView modelAndView = new ModelAndView();
     modelAndView.setViewName("files");
-    // the message of the upload we are redirected from, see importFile and
-    // FileUploadExceptionAdvice
+    // The uploadSuccess parameter carries the redirect message from importFile /
+    // FileUploadExceptionAdvice. Validate it against the allowlist of server-generated
+    // constant values before passing it to the view, so that an attacker-supplied query-string
+    // value is never rendered on the page.
     var uploadMessage = request.getParameter("uploadSuccess");
-    if (StringUtils.hasText(uploadMessage)) {
+    if (StringUtils.hasText(uploadMessage)
+        && (UPLOAD_SUCCESSFUL.equals(uploadMessage)
+            || NOTHING_TO_UPLOAD.equals(uploadMessage)
+            || UPLOAD_TOO_LARGE.equals(uploadMessage))) {
       modelAndView.addObject("uploadSuccess", uploadMessage);
       modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
     }

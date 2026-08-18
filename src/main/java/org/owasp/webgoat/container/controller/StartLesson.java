@@ -32,7 +32,7 @@ public class StartLesson {
         .findFirst()
         .ifPresent(
             lesson -> {
-              request.setAttribute("lesson", lesson);
+              request.setAttribute("lesson", lesson); // NOSONAR - value is computed internally, not user-supplied input
             });
 
     return model;

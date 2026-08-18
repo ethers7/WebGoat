@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 $(document).ready(function () {
 //    $("#postReview").on("click", function () {
 //        var commentInput = $("#reviewInput").val();

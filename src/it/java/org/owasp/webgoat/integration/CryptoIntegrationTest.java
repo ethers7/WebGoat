@@ -72,6 +72,8 @@ public class CryptoIntegrationTest extends IntegrationTest {
   }
 
   private void checkAssignment3() {
+    // Not a real credential — this is the expected answer to the XOR encoding quiz in the
+    // Cryptography lesson (test fixture used to verify the assignment solution)
     String answer_1 = "databasepassword";
     Map<String, Object> params = new HashMap<>();
     params.clear();

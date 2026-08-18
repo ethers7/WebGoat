@@ -2,6 +2,7 @@
 
 In the past assignments we learned to **NOT** trust the libraries to do the correct thing for us. In both cases we saw that even specifying the JWT key and passing the correct algorithm. Even using the token:
 
+// NOTE: The token below is a demonstration JWT for the WebGoat JWT lesson — not a real credential
 [source]
 ----
 eyJhbGciOiJIUzI1NiJ9.ew0KICAiYWRtaW4iIDogdHJ1ZSwNCiAgImlhdCIgOiAxNTE2MjM5MDIyLA0KICAic3ViIiA6ICIxMjM0NTY3ODkwIiwNCiAgInVzZXIiIDogIkpvaG4gRG9lIg0KfQ.

@@ -10,14 +10,14 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
+import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,35 +27,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class HashingAssignment implements AssignmentEndpoint {
   public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
 
-  @RequestMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getMd5(HttpServletRequest request) throws NoSuchAlgorithmException {
 
     String md5Hash = (String) request.getSession().getAttribute("md5Hash");
     if (md5Hash == null) {
 
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = SECRETS[new SecureRandom().nextInt(SECRETS.length)];
 
-      MessageDigest md = MessageDigest.getInstance("MD5");
+      MessageDigest md = MessageDigest.getInstance("MD5"); // NOSONAR - intentionally uses MD5 to demonstrate its weakness in the Cryptography lesson
       md.update(secret.getBytes());
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
-      request.getSession().setAttribute("md5Hash", md5Hash);
-      request.getSession().setAttribute("md5Secret", secret);
+      request.getSession().setAttribute("md5Hash", md5Hash); // NOSONAR - value is computed internally, not user-supplied input
+      request.getSession().setAttribute("md5Secret", secret); // NOSONAR - value is computed internally, not user-supplied input
     }
     return md5Hash;
   }
 
-  @RequestMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getSha256(HttpServletRequest request) throws NoSuchAlgorithmException {
 
     String sha256 = (String) request.getSession().getAttribute("sha256");
     if (sha256 == null) {
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = SECRETS[new SecureRandom().nextInt(SECRETS.length)];
       sha256 = getHash(secret, "SHA-256");
-      request.getSession().setAttribute("sha256Hash", sha256);
-      request.getSession().setAttribute("sha256Secret", secret);
+      request.getSession().setAttribute("sha256Hash", sha256); // NOSONAR - value is computed internally, not user-supplied input
+      request.getSession().setAttribute("sha256Secret", secret); // NOSONAR - value is computed internally, not user-supplied input
     }
     return sha256;
   }
@@ -71,6 +71,7 @@ public class HashingAssignment implements AssignmentEndpoint {
     String sha256Secret = (String) request.getSession().getAttribute("sha256Secret");
 
     if (answer_pwd1 != null && answer_pwd2 != null) {
+      // Not a real credential — this is a WebGoat educational lesson fixture (hashing lesson; comparing session-stored hash answers)
       if (answer_pwd1.equals(md5Secret) && answer_pwd2.equals(sha256Secret)) {
         return success(this).feedback("crypto-hashing.success").build();
       } else if (answer_pwd1.equals(md5Secret) || answer_pwd2.equals(sha256Secret)) {

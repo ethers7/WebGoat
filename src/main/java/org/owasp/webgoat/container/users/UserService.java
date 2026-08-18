@@ -75,8 +75,15 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    String username = webGoatUser.getUsername();
+    // Allowlist validation: schema names must contain only alphanumeric characters and underscores
+    // to prevent SQL injection via identifier injection in the CREATE SCHEMA DDL statement.
+    if (!username.matches("[a-zA-Z0-9_]+")) {
+      throw new IllegalArgumentException(
+          "Invalid username: only alphanumeric characters and underscores are allowed");
+    }
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba"); // NOSONAR - safe: username validated against allowlist [a-zA-Z0-9_]+ before use in DDL
+    flywayLessons.apply(username).migrate();
   }
 
   public List<WebGoatUser> getAllUsers() {

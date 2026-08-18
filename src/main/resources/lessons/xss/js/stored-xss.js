@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 $(document).ready(function () {
     $("#postComment").on("click", function () {
         var commentInput = $("#commentInput").val();

@@ -67,9 +67,16 @@ public class VerifyAccount implements AssignmentEndpoint {
     Map<String, String> userAnswers = new HashMap<>();
     List<String> paramNames = Collections.list(req.getParameterNames());
     for (String paramName : paramNames) {
-      // String paramName = req.getParameterNames().nextElement();
-      if (paramName.contains("secQuestion")) {
-        userAnswers.put(paramName, req.getParameter(paramName));
+      // Validate the parameter name against the expected security-question format:
+      // only names matching "secQuestion" followed by one or more digits are accepted.
+      // This prevents injection via parameter names that merely contain "secQuestion"
+      // as a substring, or that append extra characters to bypass the check.
+      if (paramName.matches("secQuestion[0-9]+")) {
+        var value = req.getParameter(paramName);
+        // Enforce a reasonable maximum length for security-question answers.
+        if (value != null && value.length() <= 100) {
+          userAnswers.put(paramName, value);
+        }
       }
     }
     return (HashMap<String, String>) userAnswers;

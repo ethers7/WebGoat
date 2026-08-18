@@ -16,8 +16,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout git repository
+                # TODO: pin to SHA for supply chain security — e.g., uses: owner/repo@<commit-sha>
                 uses: actions/checkout@v7
             -   name: Setup python
+                # TODO: pin to SHA for supply chain security — e.g., uses: owner/repo@<commit-sha>
                 uses: actions/setup-python@v7
                 with:
                     python-version: "3.9"
@@ -26,8 +28,10 @@ jobs:
                 with:
                     cache: ""
             -   name: Pre-commit checks
+                # TODO: pin to SHA for supply chain security — e.g., uses: owner/repo@<commit-sha>
                 uses: pre-commit/action@v3.0.1
             -   name: pre-commit-c-lite
+                # TODO: pin to SHA for supply chain security — e.g., uses: owner/repo@<commit-sha>
                 uses: pre-commit-ci/lite-action@v1.1.0
                 if: always()
     build:
@@ -39,7 +43,8 @@ jobs:
                 os: [ windows-latest, ubuntu-latest, macos-15-intel ]
             max-parallel: 1
         steps:
-            -   uses: actions/checkout@v7
+            -   # TODO: pin to SHA for supply chain security — e.g., uses: owner/repo@<commit-sha>
+                uses: actions/checkout@v7
             -   name: Set up JDK
                 uses: ./.github/actions/java-setup
                 with:

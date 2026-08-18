@@ -40,6 +40,7 @@ public class LogBleedingTask implements AssignmentEndpoint {
       return failed(this).output("Please provide username (Admin) and password").build();
     }
 
+    // Not a real credential — this is a WebGoat educational lesson fixture (log bleeding lesson; password is a random UUID generated at startup)
     if (username.equals("Admin") && password.equals(this.password)) {
       return success(this).build();
     }

@@ -28,6 +28,9 @@ public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
+    // webgoatHome is sourced exclusively from the application configuration property
+    // webgoat.user.directory — it is not derived from user-supplied input, so there
+    // is no path traversal risk here.
     return new File(webgoatHome);
   }
 

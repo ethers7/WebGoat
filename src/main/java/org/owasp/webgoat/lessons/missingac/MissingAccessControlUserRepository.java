@@ -41,7 +41,7 @@ public class MissingAccessControlUserRepository {
   }
 
   public User save(User user) {
-    jdbcTemplate.update(
+    jdbcTemplate.update( // NOSONAR - safe: NamedParameterJdbcTemplate with bound named parameters, not string concatenation
         "INSERT INTO access_control_users(username, password, admin)"
             + " VALUES(:username,:password,:admin)",
         new MapSqlParameterSource()

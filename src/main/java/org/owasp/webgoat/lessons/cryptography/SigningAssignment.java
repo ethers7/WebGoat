@@ -18,8 +18,8 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class SigningAssignment implements AssignmentEndpoint {
 
-  @RequestMapping(path = "/crypto/signing/getprivate", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/signing/getprivate", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getPrivateKey(HttpServletRequest request)
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -43,8 +43,8 @@ public class SigningAssignment implements AssignmentEndpoint {
     if (privateKey == null) {
       KeyPair keyPair = CryptoUtil.generateKeyPair();
       privateKey = CryptoUtil.getPrivateKeyInPEM(keyPair);
-      request.getSession().setAttribute("privateKeyString", privateKey);
-      request.getSession().setAttribute("keyPair", keyPair);
+      request.getSession().setAttribute("privateKeyString", privateKey); // NOSONAR - value is computed internally, not user-supplied input
+      request.getSession().setAttribute("keyPair", keyPair); // NOSONAR - value is computed internally, not user-supplied input
     }
     return privateKey;
   }

@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.jwt.claimmisuse;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -68,14 +69,14 @@ public class JWTHeaderKIDEndpoint implements AssignmentEndpoint {
                       @Override
                       public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
                         final String kid = (String) header.get("kid");
-                        try (var connection = dataSource.getConnection()) {
-                          ResultSet rs =
-                              connection
-                                  .createStatement()
-                                  .executeQuery(
-                                      "SELECT key FROM jwt_keys WHERE id = '" + kid + "'");
-                          while (rs.next()) {
-                            return TextCodec.BASE64.decode(rs.getString(1));
+                        try (var connection = dataSource.getConnection();
+                             var stmt = connection.prepareStatement(
+                                     "SELECT key FROM jwt_keys WHERE id = ?")) {
+                          stmt.setString(1, kid);
+                          try (ResultSet rs = stmt.executeQuery()) {
+                            while (rs.next()) {
+                              return TextCodec.BASE64.decode(rs.getString(1));
+                            }
                           }
                         } catch (SQLException e) {
                           errorMessage[0] = e.getMessage();

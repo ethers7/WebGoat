@@ -51,7 +51,7 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
       boolean usedUnion = this.unionQueryChecker(accountName);
-      query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'";
+      query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'"; // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
 
       return executeSqlInjection(connection, query, usedUnion);
     } catch (Exception e) {
@@ -69,7 +69,7 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     try (Statement statement =
         connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
 
-      ResultSet results = statement.executeQuery(query);
+      ResultSet results = statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
 
       if (!((results != null) && results.first())) {
         return failed(this)

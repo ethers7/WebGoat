@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 $(function () {
     $('.col-check').hide();
     $('#btn-admin').on('click', function () {

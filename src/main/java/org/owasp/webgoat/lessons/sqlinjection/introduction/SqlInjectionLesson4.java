@@ -43,9 +43,9 @@ public class SqlInjectionLesson4 implements AssignmentEndpoint {
     try (Connection connection = dataSource.getConnection()) {
       try (Statement statement =
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
-        statement.executeUpdate(query);
+        statement.executeUpdate(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
         connection.commit();
-        ResultSet results = statement.executeQuery("SELECT phone from employees;");
+        ResultSet results = statement.executeQuery("SELECT phone from employees;"); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
         StringBuilder output = new StringBuilder();
         // user completes lesson if column phone exists
         if (results.first()) {

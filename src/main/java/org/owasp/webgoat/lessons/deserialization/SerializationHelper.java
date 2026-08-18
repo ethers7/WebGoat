@@ -19,7 +19,7 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data)); // NOSONAR - intentionally insecure for deserialization lesson (WebGoat)
     Object o = ois.readObject();
     ois.close();
     return o;

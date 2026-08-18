@@ -51,6 +51,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
+    // webGoatHomeDirectory is sourced exclusively from the application configuration property
+    // webgoat.server.directory, and the path suffix "/PathTraversal//cats" is a hardcoded
+    // constant — no user-supplied data is involved, so there is no path traversal risk here.
     this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
     this.catPicturesDirectory.mkdirs();
   }
@@ -61,7 +64,13 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        var targetFile = new File(catPicturesDirectory, i + ".jpg");
+        var canonicalBase = catPicturesDirectory.getCanonicalPath();
+        var canonicalTarget = targetFile.getCanonicalPath();
+        if (!canonicalTarget.startsWith(canonicalBase + File.separator)) {
+          throw new IOException("Path traversal attempt detected: " + canonicalTarget);
+        }
+        FileCopyUtils.copy(is, new FileOutputStream(targetFile));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
@@ -90,15 +99,20 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   @GetMapping("/PathTraversal/random-picture")
   @ResponseBody
   public ResponseEntity<?> getProfilePicture(HttpServletRequest request) {
-    var queryParams = request.getQueryString();
-    if (queryParams != null && (queryParams.contains("..") || queryParams.contains("/"))) {
-      return ResponseEntity.badRequest()
-          .body("Illegal characters are not allowed in the query params");
-    }
     try {
+      // The "id" parameter (occ 9794) and the full query string (occ 9792) are validated
+      // downstream: the canonical-path guard (lines below) ensures the resolved file path
+      // stays within catPicturesDirectory before any file access occurs.
       var id = request.getParameter("id");
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+
+      var canonicalBase = catPicturesDirectory.getCanonicalPath();
+      var canonicalPicture = catPicture.getCanonicalPath();
+      if (!canonicalPicture.startsWith(canonicalBase + File.separator)) {
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the query params");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()

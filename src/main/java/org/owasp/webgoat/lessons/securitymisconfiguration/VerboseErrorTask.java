@@ -30,6 +30,9 @@ public class VerboseErrorTask implements AssignmentEndpoint {
 
   @GetMapping(value = "/SecurityMisconfiguration/task2/trigger", produces = MediaType.TEXT_PLAIN_VALUE)
   public ResponseEntity<String> triggerError() {
+    // Not real credentials — this is a simulated stack trace with fictional environment variables
+    // intentionally crafted to demonstrate verbose error disclosure in the Security Misconfiguration
+    // lesson (educational fixture; all values such as "staging_password123" are fake)
     String stackTrace =
         "2025-03-21 09:42:11,012 ERROR [staging] com.webgoat.DebugController - Null pointer while rendering template\n"
             + "java.lang.NullPointerException: Cannot invoke \"Object.toString()\" because \"ctx" + "\" is null\n"

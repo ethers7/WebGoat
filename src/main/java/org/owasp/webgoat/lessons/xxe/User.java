@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class User {
 
   private String username = "";
+  // Not a real credential — WebGoat educational lesson fixture (empty default field)
   private String password = "";
 
   public String getPassword() {

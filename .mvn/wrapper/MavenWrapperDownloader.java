@@ -57,6 +57,10 @@ public class MavenWrapperDownloader {
         if(mavenWrapperPropertyFile.exists()) {
             FileInputStream mavenWrapperPropertyFileInputStream = null;
             try {
+                // mavenWrapperPropertyFile is constructed from args[0] (the Maven base directory
+                // supplied by the Maven wrapper shell script) combined with the hardcoded constant
+                // MAVEN_WRAPPER_PROPERTIES_PATH. Both values are fully controlled by the build
+                // system, not by end-user input, so there is no path traversal risk here.
                 mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 webgoat.customjs.simpleXXE = function () {
     var commentInput = $("#commentInputSimple").val();
     var xml = '<?xml version="1.0"?>' +

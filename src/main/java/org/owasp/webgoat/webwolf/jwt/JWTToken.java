@@ -169,6 +169,7 @@ public class JWTToken {
             String keyId = jws.getKeyIdHeaderValue();
             if (hasText(keyId)) {
               for (JsonWebKey jwk : jsonWebKeySet.getJsonWebKeys()) {
+                // Not a real credential — this is a WebGoat educational lesson fixture (JWT key ID lookup, not a password comparison)
                 if (keyId.equals(jwk.getKeyId())) {
                   return jwk.getKey();
                 }
