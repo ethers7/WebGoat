@@ -30,7 +30,19 @@ public class SSRFTask2 implements AssignmentEndpoint {
     return furBall(url);
   }
 
+  private static boolean isAllowedUrl(String url) {
+    try {
+      String host = new URL(url).getHost();
+      return "localhost".equals(host) || "127.0.0.1".equals(host);
+    } catch (MalformedURLException e) {
+      return false;
+    }
+  }
+
   protected AttackResult furBall(String url) {
+    if (!isAllowedUrl(url)) {
+      return getFailedResult("Access to this URL is not allowed. Only localhost is permitted.");
+    }
     if (url.matches("http://ifconfig\\.pro")) {
       String html;
       try (InputStream in = new URL(url).openStream()) {

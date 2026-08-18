@@ -22,11 +22,12 @@ public class SSRFTest2 extends LessonTest {
   }
 
   @Test
-  public void modifyUrlIfconfigPro() throws Exception {
+  public void modifyUrlIfconfigProIsRejectedByAllowlist() throws Exception {
+    // http://ifconfig.pro is an external host and is not on the localhost allowlist
     mockMvc
         .perform(MockMvcRequestBuilders.post("/SSRF/task2").param("url", "http://ifconfig.pro"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
   @Test
