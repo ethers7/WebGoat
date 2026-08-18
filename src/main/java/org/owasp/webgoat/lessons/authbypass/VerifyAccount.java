@@ -69,6 +69,11 @@ public class VerifyAccount implements AssignmentEndpoint {
     for (String paramName : paramNames) {
       // String paramName = req.getParameterNames().nextElement();
       if (paramName.contains("secQuestion")) {
+        // Validate parameter name: only alphanumeric characters and underscores are
+        // accepted to prevent parameter-pollution via specially crafted names (CWE-20).
+        if (!paramName.matches("[a-zA-Z0-9_]+")) {
+          continue;
+        }
         userAnswers.put(paramName, req.getParameter(paramName));
       }
     }

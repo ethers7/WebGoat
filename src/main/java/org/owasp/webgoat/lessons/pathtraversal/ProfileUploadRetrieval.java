@@ -98,6 +98,8 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   @GetMapping("/PathTraversal/random-picture")
   @ResponseBody
   public ResponseEntity<?> getProfilePicture(HttpServletRequest request) {
+    // queryParams is used solely as a guard to reject traversal sequences before further
+    // processing — it is never echoed to any output sink (display-only guard, CWE-20).
     var queryParams = request.getQueryString();
     if (queryParams != null && (queryParams.contains("..") || queryParams.contains("/"))) {
       return ResponseEntity.badRequest()
