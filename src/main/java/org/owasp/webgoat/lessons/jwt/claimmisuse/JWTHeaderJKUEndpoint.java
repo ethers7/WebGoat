@@ -10,6 +10,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -37,6 +38,9 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 })
 public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
 
+  // Allowlist of hosts that may supply a JWKS; prevents SSRF via attacker-controlled JKU header.
+  private static final Set<String> ALLOWED_JKU_HOSTS = Set.of("localhost", "127.0.0.1");
+
   @PostMapping("/JWT/jku/follow/{user}")
   public @ResponseBody String follow(@PathVariable("user") String user) {
     if ("Jerry".equals(user)) {
@@ -54,7 +58,11 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+        var jkuUrl = new URL(jku.asString());
+        if (!ALLOWED_JKU_HOSTS.contains(jkuUrl.getHost())) {
+          return failed(this).feedback("jwt-invalid-token").build();
+        }
+        var jwkProvider = new JwkProviderBuilder(jkuUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);
