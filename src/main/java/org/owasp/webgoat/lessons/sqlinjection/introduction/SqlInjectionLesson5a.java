@@ -49,6 +49,9 @@ public class SqlInjectionLesson5a implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+        // INTENTIONAL VULNERABILITY (Lesson 5a): students must inject via the composed
+        // 'account'/'operator'/'injection' parameters to return all rows (OR TRUE trick).
+        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         ResultSet results = statement.executeQuery(query);
 
         if ((results != null) && (results.first())) {

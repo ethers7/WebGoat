@@ -57,6 +57,9 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         log(connection, query);
+        // INTENTIONAL VULNERABILITY (Lesson 8): students must inject via 'name' or 'auth_tan'
+        // to return more than one employee row (confidentiality lesson).
+        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         ResultSet results = statement.executeQuery(query);
 
         if (results.getStatement() != null) {

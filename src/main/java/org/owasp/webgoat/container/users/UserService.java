@@ -75,8 +75,18 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    String username = webGoatUser.getUsername();
+    // Validate username before embedding it in a DDL statement to prevent SQL injection.
+    // The double-quoted HSQLDB identifier syntax means the critical character to block is '"'.
+    // Allowlist: alphanumeric, underscore, hyphen, dot, and '@' (covers email-style OAuth names)
+    // all of which are safe inside a double-quoted SQL identifier. Max length 64 chars.
+    if (username == null || !username.matches("[a-zA-Z0-9@._-]{1,64}")) {
+      throw new IllegalArgumentException(
+          "Invalid username for schema creation: must contain only alphanumeric characters,"
+              + " hyphens, underscores, dots, or '@', with a maximum length of 64 characters.");
+    }
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba");
+    flywayLessons.apply(username).migrate();
   }
 
   public List<WebGoatUser> getAllUsers() {

@@ -44,7 +44,11 @@ public class SqlInjectionLesson3 implements AssignmentEndpoint {
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
         Statement checkStatement =
             connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+        // INTENTIONAL VULNERABILITY (Lesson 3): students must craft a SQL injection via
+        // the 'query' parameter to update Tobi Barnett's department to 'Sales'.
+        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         statement.executeUpdate(query);
+        // FALSE POSITIVE (static analysis): query is fully hardcoded; no user input involved.
         ResultSet results =
             checkStatement.executeQuery("SELECT * FROM employees WHERE last_name='Barnett';");
         StringBuilder output = new StringBuilder();

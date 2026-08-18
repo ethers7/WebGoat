@@ -69,6 +69,9 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     try (Statement statement =
         connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
 
+      // INTENTIONAL VULNERABILITY (Lesson 6a): students must inject a UNION SELECT via the
+      // 'userid_6a' parameter to retrieve dave's password from user_system_data.
+      // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
       ResultSet results = statement.executeQuery(query);
 
       if (!((results != null) && results.first())) {
