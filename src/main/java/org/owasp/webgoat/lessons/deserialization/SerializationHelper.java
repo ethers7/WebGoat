@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -17,12 +18,24 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  /**
+   * Deserializes a Base64-encoded object. This helper is intended only for internally-generated
+   * data (e.g. round-trip tests). Do NOT pass untrusted / user-supplied input here.
+   * The filter restricts deserialization to the lesson's expected type and common Java types;
+   * all other classes are rejected to guard against gadget-chain attacks.
+   */
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    // Try-with-resources ensures the stream is closed even on exception.
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+      ois.setObjectInputFilter(
+          ObjectInputFilter.Config.createFilter(
+              "org.dummy.insecure.framework.VulnerableTaskHolder"
+                  + ";java.lang.String"
+                  + ";java.time.*"
+                  + ";!*"));
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
