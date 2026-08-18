@@ -45,7 +45,7 @@ public class SqlInjectionLesson5a implements AssignmentEndpoint {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
       query =
-          "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
+          "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'"; // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {

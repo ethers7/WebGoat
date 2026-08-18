@@ -47,7 +47,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
   protected AttackResult injectableQueryConfidentiality(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
     String query =
-        "SELECT * FROM employees WHERE last_name = '"
+        "SELECT * FROM employees WHERE last_name = '" // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
             + name
             + "' AND auth_tan = '"
             + auth_tan
@@ -135,7 +135,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
     String time = sdf.format(cal.getTime());
 
     String logQuery =
-        "INSERT INTO access_log (time, action) VALUES ('" + time + "', '" + action + "')";
+        "INSERT INTO access_log (time, action) VALUES ('" + time + "', '" + action + "')"; // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
 
     try {
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);

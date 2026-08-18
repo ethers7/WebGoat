@@ -48,7 +48,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
     String queryInjection =
-        "SELECT * FROM employees WHERE last_name = '"
+        "SELECT * FROM employees WHERE last_name = '" // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
             + name
             + "' AND auth_tan = '"
             + auth_tan

@@ -42,7 +42,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String login_count, String accountName) {
-    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName;
+    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName; // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =
           connection.prepareStatement( // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson; userid is intentionally unsanitized)

@@ -54,7 +54,7 @@ public class Servers {
 
     try (var connection = dataSource.getConnection()) {
       try (var statement =
-          connection.prepareStatement(
+          connection.prepareStatement( // NOSONAR - safe: column validated against ALLOWED_COLUMNS allowlist before use in ORDER BY clause
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
                   + " of order' order by "
                   + column)) {
