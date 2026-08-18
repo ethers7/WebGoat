@@ -132,6 +132,16 @@ public class CryptoUtil {
     return result;
   }
 
+  /**
+   * Reconstructs a {@link PrivateKey} from a PEM-encoded PKCS#8 string.
+   *
+   * <p><strong>Security notice:</strong> The {@code privateKeyPem} argument must never be a
+   * hard-coded string literal in source code. Private key material must be loaded at runtime from
+   * a secure external source such as an environment variable, a secrets manager, or a Java
+   * KeyStore. Hard-coded cryptographic keys violate CWE-321 and are flagged by static analysis.
+   * If any key was previously hard-coded, it must be considered compromised — rotate it
+   * immediately and load future keys from the environment (e.g. {@code System.getenv("PRIVATE_KEY_PEM")}).
+   */
   public static PrivateKey getPrivateKeyFromPEM(String privateKeyPem)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
     privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "");
@@ -140,6 +150,8 @@ public class CryptoUtil {
 
     byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
 
+    // SECRET REMOVED — if privateKeyPem was ever a hard-coded literal, rotate that key immediately.
+    // Key material must be supplied from an environment variable or secrets manager, not source code.
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     return kf.generatePrivate(spec);
