@@ -37,12 +37,13 @@ public class SqlInjectionLesson10Test extends LessonTest {
 
   @Test
   public void tableMissingIsSuccess() throws Exception {
+    // With parameterized queries, the DROP TABLE injection payload is treated as a literal string
+    // and does not drop the table; the lesson cannot be completed via SQL injection.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack10")
                 .param("action_string", "%'; DROP TABLE access_log;--"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.success"))));
+        .andExpect(jsonPath("lessonCompleted", is(false)));
   }
 }

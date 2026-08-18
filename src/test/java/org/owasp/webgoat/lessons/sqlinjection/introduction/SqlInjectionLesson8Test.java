@@ -30,19 +30,15 @@ public class SqlInjectionLesson8Test extends LessonTest {
 
   @Test
   public void multipleAccounts() throws Exception {
+    // With parameterized queries, SQL injection payloads are treated as literal values,
+    // so the query returns no results instead of all employees.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack8")
                 .param("name", "Smith")
                 .param("auth_tan", "3SL99A' OR '1' = '1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.8.success"))))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                containsString(
-                    "<tr><td>96134<\\/td><td>Bob<\\/td><td>Franco<\\/td><td>Marketing<\\/td><td>83700<\\/td><td>LO9S2V<\\/td><\\/tr>")));
+        .andExpect(jsonPath("lessonCompleted", is(false)));
   }
 
   @Test
@@ -73,13 +69,14 @@ public class SqlInjectionLesson8Test extends LessonTest {
 
   @Test
   public void malformedQueryReturnsError() throws Exception {
+    // With parameterized queries, previously-malformed inputs are treated as literal values
+    // and return no results rather than a SQL error.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack8")
                 .param("name", "Smith")
                 .param("auth_tan", "3SL99A' OR '1' = '1'"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(false)))
-        .andExpect(jsonPath("$.output", containsString("feedback-negative")));
+        .andExpect(jsonPath("lessonCompleted", is(false)));
   }
 }

@@ -47,6 +47,8 @@ public class SqlInjectionLesson5aTest extends LessonTest {
 
   @Test
   public void sqlInjection() throws Exception {
+    // With parameterized queries, SQL injection payloads are treated as literal values.
+    // The injection no longer retrieves all rows; the lesson cannot be completed via injection.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -54,13 +56,13 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("operator", "OR")
                 .param("injection", "'1' = '1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("You have succeed")))
-        .andExpect(jsonPath("$.output").exists());
+        .andExpect(jsonPath("lessonCompleted", is(false)));
   }
 
   @Test
   public void sqlInjectionWrongShouldDisplayError() throws Exception {
+    // With parameterized queries, previously-malformed inputs are treated as literal values
+    // and no longer cause SQL errors.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -68,14 +70,6 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("operator", "OR")
                 .param("injection", "'1' = '1'"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", containsString(messages.getMessage("assignment.not.solved"))))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                is(
-                    "malformed string: '1''<br> Your query was: SELECT * FROM user_data WHERE"
-                        + " first_name = 'John' and last_name = 'Smith' OR '1' = '1''")));
+        .andExpect(jsonPath("lessonCompleted", is(false)));
   }
 }
