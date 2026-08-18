@@ -32,6 +32,7 @@ User Tom is allowed to vote as you can see, but he is unable to reset the votes.
 ----
 GET http://localhost:8080/WebGoat/JWT/votings/login?user=Tom HTTP/1.1
 
+// NOTE: The JWT token below is an educational example only, not a real credential.
 access_token=eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE2MDgxMjg1NjYsImFkbWluIjoiZmFsc2UiLCJ1c2VyIjoiVG9tIn0.rTSX6PSXqUoGUvQQDBiqX0re2BSt7s2-X6FPf34Qly9SMpqIUSP8jykedJbjOBNlM3_CTjgk1SvUv48Pz8zIzA
 ----
 
@@ -72,6 +73,7 @@ claims:
 
 If we use WebWolf to create our token we get:
 
+// NOTE: The JWT token below is an educational example only, not a real credential.
 [source]
 ----
 eyJhbGciOiJub25lIn0.ew0KICAiYWRtaW4iIDogInRydWUiLA0KICAiaWF0IiA6IDE2MDgxMjg1NjYsDQogICJ1c2VyIiA6ICJUb20iDQp9
