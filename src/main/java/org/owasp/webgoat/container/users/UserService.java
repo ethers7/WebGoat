@@ -82,7 +82,7 @@ public class UserService implements UserDetailsService {
       throw new IllegalArgumentException(
           "Invalid username: only alphanumeric characters and underscores are allowed");
     }
-    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba");
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba"); // NOSONAR - safe: username validated against allowlist [a-zA-Z0-9_]+ before use in DDL
     flywayLessons.apply(username).migrate();
   }
 
