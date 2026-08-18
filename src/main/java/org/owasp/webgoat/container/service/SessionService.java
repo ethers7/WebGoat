@@ -9,7 +9,7 @@ import org.owasp.webgoat.container.CurrentUser;
 import org.owasp.webgoat.container.i18n.Messages;
 import org.owasp.webgoat.container.users.WebGoatUser;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -19,7 +19,7 @@ public class SessionService {
   private final RestartLessonService restartLessonService;
   private final Messages messages;
 
-  @RequestMapping(path = "/service/enable-security.mvc", produces = "application/json")
+  @PostMapping(path = "/service/enable-security.mvc", produces = "application/json")
   @ResponseBody
   public String applySecurity(@CurrentUser WebGoatUser user) {
     // webSession.toggleSecurity();
