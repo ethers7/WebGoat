@@ -9,7 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
-import java.util.Random;
+import java.security.SecureRandom;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
@@ -34,7 +34,7 @@ public class EncodingAssignment implements AssignmentEndpoint {
     String username = request.getUserPrincipal().getName();
     if (basicAuth == null) {
       String password =
-          HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
+          HashingAssignment.SECRETS[new SecureRandom().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
       // Sanitize before storing in session: only accept a non-null, well-formed Base64 string of
       // reasonable length to prevent trust boundary violation (CWE-501).

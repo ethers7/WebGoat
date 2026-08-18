@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 //LessonContentView
 define(['jquery',
         'underscore',

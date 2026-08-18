@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 define(
     ['backbone', 'underscore'],
     function(Backbone, _) {

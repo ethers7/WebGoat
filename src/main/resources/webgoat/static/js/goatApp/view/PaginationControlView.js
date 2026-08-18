@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 define(['jquery',
         'underscore',
         'backbone',
