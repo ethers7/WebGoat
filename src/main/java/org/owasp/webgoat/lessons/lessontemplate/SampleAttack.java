@@ -43,6 +43,7 @@ public class SampleAttack implements AssignmentEndpoint {
 
     // overly simple example for success. See other existing lesssons for ways to detect 'success'
     // or 'failure'
+    // Not a real credential — this is a WebGoat educational lesson fixture (lesson template example)
     if (secretValue.equals(param1)) {
       return success(this)
           .output("Custom Output ...if you want, for success")

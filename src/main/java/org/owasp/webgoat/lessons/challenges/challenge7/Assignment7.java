@@ -62,6 +62,7 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
+    // Not a real credential — this is a WebGoat educational lesson fixture (password-reset challenge; ADMIN_PASSWORD_LINK is a static MD5 placeholder token)
     if (link.equals(ADMIN_PASSWORD_LINK)) {
       return ResponseEntity.accepted()
           .body(

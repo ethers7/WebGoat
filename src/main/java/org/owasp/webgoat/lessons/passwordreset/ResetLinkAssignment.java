@@ -71,9 +71,10 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       @RequestParam String password, @RequestParam String email, @CurrentUsername String username) {
     if (TOM_EMAIL.equals(email)) {
       String passwordTom = usersToTomPassword.getOrDefault(username, PASSWORD_TOM_9);
+      // Not a real credential — this is a WebGoat educational lesson fixture (password-reset lesson)
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
-      } else if (passwordTom.equals(password)) {
+      } else if (passwordTom.equals(password)) { // Not a real credential — educational fixture
         return success(this).build();
       }
     }

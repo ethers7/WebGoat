@@ -22,6 +22,7 @@ public class XOREncodingAssignment implements AssignmentEndpoint {
   @PostMapping("/crypto/encoding/xor")
   @ResponseBody
   public AttackResult completed(@RequestParam String answer_pwd1) {
+    // Not a real credential — this is a WebGoat educational lesson fixture (XOR encoding quiz answer)
     if (answer_pwd1 != null && answer_pwd1.equals("databasepassword")) {
       return success(this).feedback("crypto-encoding-xor.success").build();
     }

@@ -54,6 +54,7 @@ public class ActuatorExposureTask implements AssignmentEndpoint {
       value = "/SecurityMisconfiguration/task3",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public AttackResult submitApiKey(@RequestParam("apiKey") String apiKey) {
+    // Not a real credential — this is a WebGoat educational lesson fixture (actuator exposure lesson)
     if (LEAKED_API_KEY.equals(apiKey)) {
       return success(this)
           .feedback("securitymisconfiguration.task3.success")
