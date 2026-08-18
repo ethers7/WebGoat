@@ -41,6 +41,7 @@ public class MissingAccessControlUserRepository {
   }
 
   public User save(User user) {
+    // Named parameters via MapSqlParameterSource — no user input is concatenated; not vulnerable to SQL injection.
     jdbcTemplate.update(
         "INSERT INTO access_control_users(username, password, admin)"
             + " VALUES(:username,:password,:admin)",

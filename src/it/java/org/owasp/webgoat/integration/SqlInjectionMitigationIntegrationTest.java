@@ -73,6 +73,8 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
         .get(webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=unknown"))
         .then()
         .statusCode(500)
+        // The SQL string below is test fixture data: it is matched against the server's error-trace
+        // response body to assert the correct exception message. It is NOT executed as a query.
         .body(
             "trace",
             containsString(
