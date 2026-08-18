@@ -45,7 +45,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
     String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName;
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =
-          connection.prepareStatement(
+          connection.prepareStatement( // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson; userid is intentionally unsanitized)
               queryString, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
       int count = 0;

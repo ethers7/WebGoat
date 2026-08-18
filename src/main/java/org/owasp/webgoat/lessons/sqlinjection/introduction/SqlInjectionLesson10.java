@@ -97,7 +97,7 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
     try {
       Statement stmt =
           connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-      ResultSet results = stmt.executeQuery("SELECT * FROM access_log");
+      ResultSet results = stmt.executeQuery("SELECT * FROM access_log"); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
       int cols = results.getMetaData().getColumnCount();
       return (cols > 0);
     } catch (SQLException e) {

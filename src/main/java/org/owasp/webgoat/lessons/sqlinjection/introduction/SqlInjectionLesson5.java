@@ -62,7 +62,7 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query);
+        statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
         if (checkSolution(connection)) {
           return success(this).build();
         }

@@ -44,9 +44,9 @@ public class SqlInjectionLesson3 implements AssignmentEndpoint {
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
         Statement checkStatement =
             connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
-        statement.executeUpdate(query);
+        statement.executeUpdate(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
         ResultSet results =
-            checkStatement.executeQuery("SELECT * FROM employees WHERE last_name='Barnett';");
+            checkStatement.executeQuery("SELECT * FROM employees WHERE last_name='Barnett';"); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
         StringBuilder output = new StringBuilder();
         // user completes lesson if the department of Tobi Barnett now is 'Sales'
         results.first();
