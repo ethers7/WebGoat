@@ -6,6 +6,7 @@ package org.owasp.webgoat.lessons.sqlinjection.mitigation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,17 +41,23 @@ public class Servers {
     this.dataSource = dataSource;
   }
 
+  private static final Set<String> ALLOWED_COLUMNS =
+      Set.of("id", "hostname", "ip", "mac", "status", "description");
+
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
+
+    // Validate column against allowlist to prevent ORDER BY injection
+    String safeColumn = ALLOWED_COLUMNS.contains(column) ? column : "id";
 
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
                   + " of order' order by "
-                  + column)) {
+                  + safeColumn)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
