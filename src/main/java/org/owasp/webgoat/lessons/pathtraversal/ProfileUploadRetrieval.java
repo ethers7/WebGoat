@@ -100,6 +100,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   @ResponseBody
   public ResponseEntity<?> getProfilePicture(HttpServletRequest request) {
     try {
+      // The "id" parameter (occ 9794) and the full query string (occ 9792) are validated
+      // downstream: the canonical-path guard (lines below) ensures the resolved file path
+      // stays within catPicturesDirectory before any file access occurs.
       var id = request.getParameter("id");
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");

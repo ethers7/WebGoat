@@ -129,6 +129,26 @@ class FileServerTest {
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 
+  @Test
+  @DisplayName("An arbitrary uploadSuccess value not in the allowlist is rejected and never reaches the view")
+  void shouldRejectArbitraryUploadMessage() throws Exception {
+    // An attacker-controlled uploadSuccess query-string value must not be passed
+    // to the view, so neither uploadSuccess nor uploadFailed should appear in the model.
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "<script>alert(1)</script>")
+                .principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "arbitrary attacker message")
+                .principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+  }
+
   private Path userDirectory() {
     return fileServerLocation.resolve(USERNAME);
   }

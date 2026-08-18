@@ -109,10 +109,15 @@ public class FileServer {
 
     ModelAndView modelAndView = new ModelAndView();
     modelAndView.setViewName("files");
-    // the message of the upload we are redirected from, see importFile and
-    // FileUploadExceptionAdvice
+    // The uploadSuccess parameter carries the redirect message from importFile /
+    // FileUploadExceptionAdvice. Validate it against the allowlist of server-generated
+    // constant values before passing it to the view, so that an attacker-supplied query-string
+    // value is never rendered on the page.
     var uploadMessage = request.getParameter("uploadSuccess");
-    if (StringUtils.hasText(uploadMessage)) {
+    if (StringUtils.hasText(uploadMessage)
+        && (UPLOAD_SUCCESSFUL.equals(uploadMessage)
+            || NOTHING_TO_UPLOAD.equals(uploadMessage)
+            || UPLOAD_TOO_LARGE.equals(uploadMessage))) {
       modelAndView.addObject("uploadSuccess", uploadMessage);
       modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
     }
