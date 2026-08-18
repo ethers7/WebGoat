@@ -72,7 +72,7 @@ public class CryptoIntegrationTest extends IntegrationTest {
   }
 
   private void checkAssignment3() {
-    String answer_1 = "databasepassword";
+    String answer_1 = "databasepassword"; // Not a real secret — educational fixture value used as the expected answer for the crypto encoding lesson.
     Map<String, Object> params = new HashMap<>();
     params.clear();
     params.put("answer_pwd1", answer_1);

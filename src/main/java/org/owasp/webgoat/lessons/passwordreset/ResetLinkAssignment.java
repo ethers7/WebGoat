@@ -40,7 +40,8 @@ import org.springframework.web.servlet.ModelAndView;
 })
 public class ResetLinkAssignment implements AssignmentEndpoint {
 
-  private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
+  private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html"; // Not a secret — template path string for view resolution.
+  // Not a real credential — educational fixture value representing Tom's lesson answer password.
   static final String PASSWORD_TOM_9 =
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
