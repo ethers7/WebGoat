@@ -46,6 +46,8 @@ public class SqlInjectionLesson2 implements AssignmentEndpoint {
   protected AttackResult injectableQuery(String query) {
     try (var connection = dataSource.getConnection()) {
       Statement statement = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+      // Intentionally injectable: this lesson teaches learners to craft raw SQL queries;
+      // the user supplies the entire query string as part of the educational exercise.
       ResultSet results = statement.executeQuery(query);
       StringBuilder output = new StringBuilder();
 

@@ -75,7 +75,10 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
+    // CREATE SCHEMA identifiers cannot be parameterized in JDBC; sanitize the username to only
+    // allow alphanumeric and underscore characters before embedding it in the DDL statement.
+    String sanitizedUsername = webGoatUser.getUsername().replaceAll("[^A-Za-z0-9_]", "");
+    jdbcTemplate.execute("CREATE SCHEMA \"" + sanitizedUsername + "\" authorization dba");
     flywayLessons.apply(webGoatUser.getUsername()).migrate();
   }
 

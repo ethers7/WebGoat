@@ -62,6 +62,8 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+        // Intentionally injectable: this lesson teaches learners to craft GRANT SQL statements;
+        // the user supplies the entire query string as part of the educational exercise.
         statement.executeQuery(query);
         if (checkSolution(connection)) {
           return success(this).build();

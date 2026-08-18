@@ -90,6 +90,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+    // Internal helper — query is always a static hardcoded string; no user input is passed here.
     ResultSet results = statement.executeQuery(query);
     results.first();
     return results.getInt(1);
@@ -111,6 +112,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
+    // Static hardcoded query — no user input involved; not vulnerable to SQL injection.
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     return statement.executeQuery(query);

@@ -41,6 +41,7 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   protected String getPassword() {
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
+      // Static hardcoded query — no user input involved; retrieves a fixed record for lesson logic.
       String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
       try {
         Statement statement =
