@@ -51,6 +51,8 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
+    // Not a path traversal risk: "/PathTraversal/" + "/cats" is a fully hardcoded literal
+    // appended to the application-configuration directory — no user-controlled input is involved.
     this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
     this.catPicturesDirectory.mkdirs();
   }

@@ -64,6 +64,9 @@ public class ProfileZipSlip extends ProfileUploadBase {
 
   @SneakyThrows
   private AttackResult processZipUpload(MultipartFile file, String username) {
+    // Not a path traversal risk: Files.createTempDirectory(prefix) creates a directory inside
+    // the JVM/OS temp directory (java.io.tmpdir) — the prefix only names the directory, it
+    // cannot escape the temp location regardless of the username value.
     var tmpZipDirectory = Files.createTempDirectory(username);
     cleanupAndCreateDirectoryForUser(username);
     var currentImage = getProfilePictureAsBase64(username);
