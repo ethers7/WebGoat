@@ -57,6 +57,8 @@ public class MavenWrapperDownloader {
         if(mavenWrapperPropertyFile.exists()) {
             FileInputStream mavenWrapperPropertyFileInputStream = null;
             try {
+                // mavenWrapperPropertyFile path is internally derived from the build wrapper's
+                // fixed constant MAVEN_WRAPPER_PROPERTIES_PATH — not a user-controllable input.
                 mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);

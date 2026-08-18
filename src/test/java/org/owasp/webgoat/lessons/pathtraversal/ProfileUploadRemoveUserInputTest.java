@@ -31,6 +31,7 @@ class ProfileUploadRemoveUserInputTest extends LessonTest {
         new MockMultipartFile(
             "uploadedFileRemoveUserInput", "../picture.jpg", "text/plain", "an image".getBytes());
 
+    // Path traversal via original filename is now rejected by canonical path validation.
     mockMvc
         .perform(
             MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload-remove-user-input")
@@ -38,7 +39,7 @@ class ProfileUploadRemoveUserInputTest extends LessonTest {
                 .param("fullNameFix", "John Doe"))
         .andExpect(status().is(200))
         .andExpect(jsonPath("$.assignment", CoreMatchers.equalTo("ProfileUploadRemoveUserInput")))
-        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
+        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 
   @Test

@@ -161,6 +161,10 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
     if (lang == null || lang.equals("")) {
       lang = "";
     } else {
+      // Validate lang against an allowlist: only letters and hyphens (e.g. "en", "nl", "de", "fr")
+      if (!lang.matches("[A-Za-z]{2,8}(-[A-Za-z0-9]{2,8})*")) {
+        throw new IllegalArgumentException("Invalid language code: " + lang);
+      }
       lang = "_" + lang;
     }
     try (InputStream input =

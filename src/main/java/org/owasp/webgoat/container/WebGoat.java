@@ -28,6 +28,8 @@ public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
+    // webgoatHome is an application configuration property (webgoat.user.directory),
+    // not a user-controllable input at request time.
     return new File(webgoatHome);
   }
 

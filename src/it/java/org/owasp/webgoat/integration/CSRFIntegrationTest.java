@@ -96,9 +96,14 @@ public class CSRFIntegrationTest extends IntegrationTest {
   private void uploadTrickHtml(String htmlName, String htmlContent) throws IOException {
 
     // remove any left over html
-    Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path webWolfFilePath = Paths.get(webwolfFileDir).toAbsolutePath().normalize();
+    Path resolvedPath = webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).normalize();
+    // Validate resolved path stays within webWolfFilePath to prevent path traversal
+    if (!resolvedPath.startsWith(webWolfFilePath)) {
+      throw new IOException("Path traversal attempt rejected: resolved path escapes base directory");
+    }
+    if (resolvedPath.toFile().exists()) {
+      Files.delete(resolvedPath);
     }
 
     // upload trick html

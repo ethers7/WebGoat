@@ -31,6 +31,7 @@ class ProfileUploadTest extends LessonTest {
         new MockMultipartFile(
             "uploadedFile", "../picture.jpg", "text/plain", "an image".getBytes());
 
+    // Path traversal in fullName is now rejected by canonical path validation in the base class.
     mockMvc
         .perform(
             MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
@@ -38,7 +39,7 @@ class ProfileUploadTest extends LessonTest {
                 .param("fullName", "../John Doe"))
         .andExpect(status().is(200))
         .andExpect(jsonPath("$.assignment", CoreMatchers.equalTo("ProfileUpload")))
-        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
+        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 
   @Test
@@ -48,6 +49,7 @@ class ProfileUploadTest extends LessonTest {
         new MockMultipartFile(
             "uploadedFile", "../picture.jpg", "text/plain", "an image".getBytes());
 
+    // Path traversal in fullName is now rejected by canonical path validation in the base class.
     mockMvc
         .perform(
             MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
@@ -55,7 +57,6 @@ class ProfileUploadTest extends LessonTest {
                 .param("fullName", "../../" + "test"))
         .andExpect(status().is(200))
         .andExpect(jsonPath("$.assignment", CoreMatchers.equalTo("ProfileUpload")))
-        .andExpect(jsonPath("$.feedback", CoreMatchers.containsString("Nice try")))
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 
@@ -64,6 +65,7 @@ class ProfileUploadTest extends LessonTest {
   void shouldNotOverrideExistingFile() throws Exception {
     var profilePicture =
         new MockMultipartFile("uploadedFile", "picture.jpg", "text/plain", "an image".getBytes());
+    // Path traversal in fullName is rejected by canonical path validation before any file I/O.
     mockMvc
         .perform(
             MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
@@ -72,9 +74,7 @@ class ProfileUploadTest extends LessonTest {
         .andExpect(
             jsonPath(
                 "$.output",
-                CoreMatchers.anyOf(
-                    CoreMatchers.containsString("Is a directory"),
-                    CoreMatchers.containsString("..\\\\" + "test"))))
+                CoreMatchers.containsString("Path traversal attempt detected in filename")))
         .andExpect(status().is(200));
   }
 

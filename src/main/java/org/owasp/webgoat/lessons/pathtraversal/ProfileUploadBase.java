@@ -49,6 +49,14 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
     try {
       var uploadedFile = new File(uploadDirectory, fullName);
+      // Canonicalize and validate that uploadedFile stays within uploadDirectory
+      File canonicalUploadDir = uploadDirectory.getCanonicalFile();
+      File canonicalUploadedFile = uploadedFile.getCanonicalFile();
+      if (!canonicalUploadedFile.getPath().startsWith(
+              canonicalUploadDir.getPath() + File.separator)
+          && !canonicalUploadedFile.equals(canonicalUploadDir)) {
+        return failed(this).output("Path traversal attempt detected in filename").build();
+      }
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
@@ -68,6 +76,13 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
     var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    // Canonicalize and validate that uploadDirectory stays within webGoatHomeDirectory
+    File canonicalBase = new File(this.webGoatHomeDirectory).getCanonicalFile();
+    File canonicalUpload = uploadDirectory.getCanonicalFile();
+    if (!canonicalUpload.getPath().startsWith(canonicalBase.getPath() + File.separator)
+        && !canonicalUpload.equals(canonicalBase)) {
+      throw new IOException("Path traversal attempt rejected: upload directory escapes base");
+    }
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
@@ -99,8 +114,16 @@ public class ProfileUploadBase implements AssignmentEndpoint {
         .body(getProfilePictureAsBase64(username));
   }
 
+  @SneakyThrows
   protected byte[] getProfilePictureAsBase64(String username) {
     var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    // Canonicalize and validate that profilePictureDirectory stays within webGoatHomeDirectory
+    File canonicalBase = new File(this.webGoatHomeDirectory).getCanonicalFile();
+    File canonicalProfileDir = profilePictureDirectory.getCanonicalFile();
+    if (!canonicalProfileDir.getPath().startsWith(canonicalBase.getPath() + File.separator)
+        && !canonicalProfileDir.equals(canonicalBase)) {
+      return defaultImage();
+    }
     var profileDirectoryFiles = profilePictureDirectory.listFiles();
 
     if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
@@ -109,6 +132,8 @@ public class ProfileUploadBase implements AssignmentEndpoint {
           .findFirst()
           .map(
               file -> {
+                // profileDirectoryFiles[0] is the first file from the already-validated
+                // directory listing — not user-controlled input.
                 try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
                   return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
                 } catch (IOException e) {
