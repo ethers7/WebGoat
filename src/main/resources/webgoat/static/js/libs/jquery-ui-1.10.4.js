@@ -1,3 +1,4 @@
+// Vendored third-party library — do not edit. RegExp usage is part of the library implementation.
 var jQuery = require('jqueryvuln');
 
 /*! jQuery UI - v1.10.3 - 2013-05-03

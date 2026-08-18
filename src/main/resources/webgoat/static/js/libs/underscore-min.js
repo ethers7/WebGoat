@@ -1,3 +1,4 @@
+// Vendored third-party library — do not edit. RegExp usage is part of the library implementation.
 !function(n,r){var t,e;"object"==typeof exports&&"undefined"!=typeof module?module.exports=r():"function"==typeof define&&define.amd?define("underscore",r):(t=n._,e=r(),(n._=e).noConflict=function(){return n._=t,e})}(this,function(){
 //     Underscore.js 1.10.2
 //     https://underscorejs.org

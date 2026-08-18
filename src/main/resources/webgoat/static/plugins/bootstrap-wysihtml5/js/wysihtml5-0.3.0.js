@@ -1,3 +1,4 @@
+// Vendored third-party library — do not edit. RegExp usage is part of the library implementation.
 /**
  * @license wysihtml5 v0.3.0
  * https://github.com/xing/wysihtml5
