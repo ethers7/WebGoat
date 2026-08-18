@@ -45,7 +45,7 @@ public class Assignment5 implements AssignmentEndpoint {
               "select password from challenge_users where userid = ? and password = ?");
       statement.setString(1, username_login);
       statement.setString(2, password_login);
-      ResultSet resultSet = statement.executeQuery();
+      ResultSet resultSet = statement.executeQuery(); // NOSONAR - safe: PreparedStatement with bound parameters, not a formatted SQL string
 
       if (resultSet.next()) {
         return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();

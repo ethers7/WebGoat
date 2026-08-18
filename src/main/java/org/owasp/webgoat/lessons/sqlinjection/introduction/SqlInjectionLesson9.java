@@ -62,7 +62,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      statement.execute(queryInjection); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);

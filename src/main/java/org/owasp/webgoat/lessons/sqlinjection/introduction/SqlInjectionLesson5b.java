@@ -66,7 +66,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
       // String query = "SELECT * FROM user_data WHERE Login_Count = " + login_count + " and userid
       // = " + accountName, ;
       try {
-        ResultSet results = query.executeQuery();
+        ResultSet results = query.executeQuery(); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson; userid is intentionally unsanitized)
 
         if ((results != null) && (results.first() == true)) {
           ResultSetMetaData resultsMetaData = results.getMetaData();

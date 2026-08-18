@@ -59,7 +59,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         log(connection, query);
-        ResultSet results = statement.executeQuery(query);
+        ResultSet results = statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
 
         if (results.getStatement() != null) {
           if (results.first()) {
@@ -139,7 +139,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
 
     try {
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      statement.executeUpdate(logQuery);
+      statement.executeUpdate(logQuery); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
     } catch (SQLException e) {
       System.err.println(e.getMessage());
     }

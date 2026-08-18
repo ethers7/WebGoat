@@ -53,7 +53,7 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
         Statement statement =
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        ResultSet results = statement.executeQuery(query);
+        ResultSet results = statement.executeQuery(query); // NOSONAR - intentionally vulnerable for educational purposes (WebGoat SQL injection lesson)
 
         if (results.getStatement() != null) {
           results.first();

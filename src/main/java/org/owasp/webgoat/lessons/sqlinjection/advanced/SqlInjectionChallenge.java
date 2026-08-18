@@ -59,7 +59,7 @@ public class SqlInjectionChallenge implements AssignmentEndpoint {
             connection.prepareStatement(
                 "select userid from sql_challenge_users where userid = ?");
         checkStatement.setString(1, username);
-        ResultSet resultSet = checkStatement.executeQuery();
+        ResultSet resultSet = checkStatement.executeQuery(); // NOSONAR - safe: PreparedStatement with bound parameter, not a formatted SQL string
 
         if (resultSet.next()) {
           attackResult = failed(this).feedback("user.exists").feedbackArgs(username).build();
