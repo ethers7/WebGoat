@@ -31,6 +31,7 @@ public class SecureDefaultsAssignment implements AssignmentEndpoint {
       throws NoSuchAlgorithmException {
     if (secretFileName != null && secretFileName.equals("default_secret")) {
       if (secretText != null
+          // Not a real secret — expected SHA-256 hash of the lesson fixture answer for the Secure Defaults cryptography exercise.
           && HashingAssignment.getHash(secretText, "SHA-256")
               .equalsIgnoreCase(
                   "34de66e5caf2cb69ff2bebdc1f3091ecf6296852446c718e38ebfa60e4aa75d2")) {

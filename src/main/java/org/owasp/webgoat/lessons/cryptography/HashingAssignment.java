@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AssignmentHints({"crypto-hashing.hints.1", "crypto-hashing.hints.2"})
 public class HashingAssignment implements AssignmentEndpoint {
+  // Not real credentials — well-known weak password examples used as educational fixtures in the Hashing lesson to demonstrate hash cracking.
   public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
 
   @GetMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class DefaultCredentialsTask implements AssignmentEndpoint {
 
+  // Not real credentials — educational fixture values demonstrating default credential risks in the Security Misconfiguration lesson.
   private static final String DEFAULT_USERNAME = "admin";
   private static final String DEFAULT_PASSWORD = "admin";
 

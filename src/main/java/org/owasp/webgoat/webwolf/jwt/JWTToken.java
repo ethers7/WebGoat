@@ -39,6 +39,7 @@ import org.jose4j.lang.UnresolvableKeyException;
 public class JWTToken {
 
   private String encoded;
+  // Not a real secret — lesson-supplied or learner-entered JWT signing key used in the JWT lesson exercises.
   private String secretKey;
   private String header;
   private boolean validHeader;

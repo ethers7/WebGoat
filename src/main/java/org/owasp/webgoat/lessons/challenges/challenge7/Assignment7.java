@@ -33,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
+  // Not a real secret — educational fixture MD5 hash used as the admin password reset link in Challenge 7 lesson exercise.
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
   // Not a real secret — email template string used as educational content for the password reset challenge lesson.

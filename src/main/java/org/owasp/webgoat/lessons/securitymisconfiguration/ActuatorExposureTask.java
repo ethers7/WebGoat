@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class ActuatorExposureTask implements AssignmentEndpoint {
 
+  // Not a real secret — intentionally "leaked" educational fixture API key used in the Actuator Exposure lesson to demonstrate insecure endpoint exposure.
   static final String LEAKED_API_KEY = "INTERNAL-API-KEY-987";
 
   @GetMapping(

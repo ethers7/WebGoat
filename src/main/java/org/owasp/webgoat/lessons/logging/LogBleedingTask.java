@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogBleedingTask implements AssignmentEndpoint {
 
   private static final Logger log = LoggerFactory.getLogger(LogBleedingTask.class);
+  // Not a real secret — dynamically generated lesson fixture password used in the Log Bleeding exercise to demonstrate credential leakage via logs.
   private final String password;
 
   public LogBleedingTask() {

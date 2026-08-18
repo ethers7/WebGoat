@@ -34,6 +34,7 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       "Cookie details for user %s:<br />" + COOKIE_NAME + "=%s";
   private static final String ATTACK_USERNAME = "tom";
 
+  // Not real credentials — educational fixture passwords used in the Spoof Cookie lesson exercise.
   private static final Map<String, String> users =
       Map.of("webgoat", "webgoat", "admin", "admin", ATTACK_USERNAME, "apasswordfortom");
 

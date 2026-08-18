@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AssignmentHints({"lesson-template.hints.1", "lesson-template.hints.2", "lesson-template.hints.3"})
 public class SampleAttack implements AssignmentEndpoint {
+  // Not a real secret — educational fixture value used in the lesson template sample attack exercise.
   private static final String secretValue = "secr37Value";
 
   private final LessonSession userSessionData;
