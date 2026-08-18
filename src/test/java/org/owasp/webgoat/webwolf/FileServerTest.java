@@ -129,6 +129,27 @@ class FileServerTest {
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 
+  @Test
+  @DisplayName("A path-traversal filename is rejected and no file is written outside the user directory")
+  void shouldRejectPathTraversalFilename() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+    // Attacker supplies a filename with directory separators attempting to escape the upload dir.
+    var traversalFile =
+        new MockMultipartFile(
+            "file",
+            "../evil.txt",
+            "text/plain",
+            "evil".getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalFile).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=Nothing+to+upload"));
+
+    // No file must have been written anywhere in the temp tree.
+    Assertions.assertThat(uploadedFiles()).isEmpty();
+  }
+
   private Path userDirectory() {
     return fileServerLocation.resolve(USERNAME);
   }
