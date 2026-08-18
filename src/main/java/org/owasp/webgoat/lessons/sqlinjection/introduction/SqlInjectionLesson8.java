@@ -137,6 +137,8 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
     String logQuery = "INSERT INTO access_log (time, action) VALUES (?, ?)";
 
     try {
+      // FALSE POSITIVE (static analysis): logQuery uses '?' placeholders; 'action' is bound as a
+      // parameter value via PreparedStatement — no SQL injection risk here.
       PreparedStatement statement = connection.prepareStatement(logQuery);
       statement.setString(1, time);
       statement.setString(2, action);
