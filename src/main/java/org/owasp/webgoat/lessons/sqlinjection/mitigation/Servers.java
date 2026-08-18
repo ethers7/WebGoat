@@ -6,6 +6,7 @@ package org.owasp.webgoat.lessons.sqlinjection.mitigation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,15 @@ public class Servers {
     this.dataSource = dataSource;
   }
 
+  private static final Set<String> ALLOWED_COLUMNS =
+      Set.of("id", "hostname", "ip", "mac", "status", "description");
+
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public List<Server> sort(@RequestParam String column) throws Exception {
+    if (!ALLOWED_COLUMNS.contains(column)) {
+      throw new IllegalArgumentException("Invalid column name: " + column);
+    }
     List<Server> servers = new ArrayList<>();
 
     try (var connection = dataSource.getConnection()) {
