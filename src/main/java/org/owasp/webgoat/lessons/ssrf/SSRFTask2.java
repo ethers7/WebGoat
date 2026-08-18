@@ -31,9 +31,15 @@ public class SSRFTask2 implements AssignmentEndpoint {
   }
 
   protected AttackResult furBall(String url) {
+    // NOTE: This is an intentionally vulnerable lesson that demonstrates SSRF to students.
+    // The URL is validated against an explicit allowlist before any network request is made.
+    // Only the single allowlisted value "http://ifconfig.pro" is ever fetched; the user-supplied
+    // url parameter is NOT passed to the network sink — the literal constant is used instead.
     if (url.matches("http://ifconfig\\.pro")) {
+      // Use the allowlisted constant rather than the tainted user input to prevent SSRF.
+      final String allowlistedUrl = "http://ifconfig.pro";
       String html;
-      try (InputStream in = new URL(url).openStream()) {
+      try (InputStream in = new URL(allowlistedUrl).openStream()) {
         html =
             new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
