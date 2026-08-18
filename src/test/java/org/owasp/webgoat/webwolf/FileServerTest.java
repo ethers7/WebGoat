@@ -147,4 +147,27 @@ class FileServerTest {
     return new MockMultipartFile(
         "file", "test.txt", "text/plain", "test".getBytes(StandardCharsets.UTF_8));
   }
+
+  @Test
+  @DisplayName("Path traversal in the uploaded filename is stripped — only the base name is stored")
+  void shouldSanitizePathTraversalInFilename() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    var traversalFile =
+        new MockMultipartFile(
+            "file",
+            "../../../etc/passwd",
+            "text/plain",
+            "malicious".getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalFile).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=File+uploaded+successful"));
+
+    // Must land inside the user's own directory, not at an arbitrary path
+    Assertions.assertThat(userDirectory().resolve("passwd")).content().isEqualTo("malicious");
+    // The file must NOT have escaped the user directory
+    Assertions.assertThat(fileServerLocation.resolve("etc").resolve("passwd")).doesNotExist();
+  }
 }
