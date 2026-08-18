@@ -37,9 +37,30 @@ class OpenRedirectLessonMetadataTest {
   }
 
   @Test
-  void realRedirectReturnsRedirectPrefixForSuppliedUrl() {
+  void realRedirectAllowsRelativeUrl() {
+    ModelAndView response = realRedirect.real("/OpenRedirect/start.mvc");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/OpenRedirect/start.mvc");
+  }
+
+  @Test
+  void realRedirectBlocksAbsoluteExternalUrl() {
     ModelAndView response = realRedirect.real("https://attacker.example");
 
-    assertThat(response.getViewName()).isEqualTo("redirect:https://attacker.example");
+    assertThat(response.getViewName()).isEqualTo("redirect:/");
+  }
+
+  @Test
+  void realRedirectBlocksProtocolRelativeUrl() {
+    ModelAndView response = realRedirect.real("//attacker.example");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/");
+  }
+
+  @Test
+  void realRedirectBlocksNullUrl() {
+    ModelAndView response = realRedirect.real(null);
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/");
   }
 }

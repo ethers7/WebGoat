@@ -17,7 +17,12 @@ public class OpenRedirectRealRedirect {
 
   @GetMapping("/OpenRedirect/realRedirect")
   public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
+    // Only permit same-origin relative redirects (must start with "/" but not "//").
+    // Protocol-relative ("//evil.com") and absolute ("https://evil.com") URLs are rejected
+    // to prevent open redirect abuse. Rotate any exposed credentials and load from env.
+    if (url == null || !url.startsWith("/") || url.startsWith("//")) {
+      return new ModelAndView("redirect:/");
+    }
     return new ModelAndView("redirect:" + url);
   }
 }
