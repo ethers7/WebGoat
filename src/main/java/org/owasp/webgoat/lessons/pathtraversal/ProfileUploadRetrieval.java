@@ -100,8 +100,22 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
+      // Allow only digit-only IDs (valid cat IDs are 1–10).  URL-encoded traversal
+      // sequences such as %2E%2E%2F decode to non-digit characters and are therefore
+      // rejected here before reaching the File constructor.
+      if (id != null && !id.matches("\\d+")) {
+        id = null;
+      }
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+
+      // Canonical path guard: ensure the resolved file stays inside catPicturesDirectory.
+      var canonicalBase = catPicturesDirectory.getCanonicalPath();
+      var canonicalPicture = catPicture.getCanonicalPath();
+      if (!canonicalPicture.startsWith(canonicalBase + File.separator)) {
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the query params");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()

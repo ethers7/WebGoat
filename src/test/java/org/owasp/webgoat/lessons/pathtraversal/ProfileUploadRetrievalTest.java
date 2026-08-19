@@ -42,22 +42,12 @@ class ProfileUploadRetrievalTest extends LessonTest {
         .andExpect(header().string("Location", containsString("?id=")))
         .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
 
-    // Browse the directories
+    // Path traversal attempts using URL-encoded sequences must now be rejected (400).
     var uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2F");
-    mockMvc
-        .perform(get(uri))
-        .andExpect(status().is(404))
-        // .andDo(MockMvcResultHandlers.print())
-        .andExpect(content().string(containsString("path-traversal-secret.jpg")));
+    mockMvc.perform(get(uri)).andExpect(status().is(400));
 
-    // Retrieve the secret file (note: .jpg is added by the server)
     uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret");
-    mockMvc
-        .perform(get(uri))
-        .andExpect(status().is(200))
-        .andExpect(
-            content().string("You found it submit the SHA-512 hash of your username as answer"))
-        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
+    mockMvc.perform(get(uri)).andExpect(status().is(400));
 
     // Post flag
     mockMvc
@@ -78,9 +68,21 @@ class ProfileUploadRetrievalTest extends LessonTest {
 
   @Test
   void unknownFileShouldGiveDirectoryContents() throws Exception {
+    // Use a digit-only but non-existent cat ID so the validation passes and the
+    // "file not found" branch is exercised (returns 404 with directory listing).
     mockMvc
-        .perform(get("/PathTraversal/random-picture?id=test"))
+        .perform(get("/PathTraversal/random-picture?id=999"))
         .andExpect(status().is(404))
         .andExpect(content().string(containsString("cats" + File.separator + "8.jpg")));
+  }
+
+  @Test
+  void nonDigitIdShouldFallBackToRandomPicture() throws Exception {
+    // Non-digit IDs (e.g. path-traversal attempts like "test") must be silently
+    // replaced with a random valid picture rather than being passed to File().
+    mockMvc
+        .perform(get("/PathTraversal/random-picture?id=test"))
+        .andExpect(status().is(200))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
   }
 }
