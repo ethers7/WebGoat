@@ -15,6 +15,7 @@ for all of this, but if you want to challenge yourself and use tools for real pe
 Let's try decoding a JWT token, for this you can use the webWolfLink:JWT[target=jwt] functionality inside WebWolf or any
 of the additional tools.
 
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 .Given the following token:
 [source]
 ----
