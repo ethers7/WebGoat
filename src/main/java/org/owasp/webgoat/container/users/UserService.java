@@ -75,8 +75,13 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    String username = webGoatUser.getUsername();
+    if (username == null || !username.matches("[a-zA-Z0-9@._-]{1,64}")) { // allowlist before DDL to prevent injection
+      throw new IllegalArgumentException(
+          "Invalid username for schema creation: must be alphanumeric/@._- max 64 chars.");
+    }
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba"); // username allowlisted above
+    flywayLessons.apply(username).migrate();
   }
 
   public List<WebGoatUser> getAllUsers() {

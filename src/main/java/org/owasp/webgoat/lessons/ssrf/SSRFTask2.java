@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -24,6 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"ssrf.hint3"})
 public class SSRFTask2 implements AssignmentEndpoint {
 
+  // Only these hosts are permitted — prevents SSRF to arbitrary internal/external targets.
+  private static final Set<String> ALLOWED_HOSTS = Set.of("ifconfig.pro");
+
   @PostMapping("/SSRF/task2")
   @ResponseBody
   public AttackResult completed(@RequestParam String url) {
@@ -32,13 +36,23 @@ public class SSRFTask2 implements AssignmentEndpoint {
 
   protected AttackResult furBall(String url) {
     if (url.matches("http://ifconfig\\.pro")) {
+      // Validate the host against the allowlist before making any outbound request.
+      URL parsedUrl;
+      try {
+        parsedUrl = new URL(url);
+      } catch (MalformedURLException e) {
+        return getFailedResult(e.getMessage());
+      }
+      String host = parsedUrl.getHost();
+      if (host == null || !ALLOWED_HOSTS.contains(host.toLowerCase())) {
+        return getFailedResult("Request to host '" + host + "' is not allowed.");
+      }
+
       String html;
-      try (InputStream in = new URL(url).openStream()) {
+      try (InputStream in = parsedUrl.openStream()) {
         html =
             new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
-      } catch (MalformedURLException e) {
-        return getFailedResult(e.getMessage());
       } catch (IOException e) {
         // in case the external site is down, the test and lesson should still be ok
         html =

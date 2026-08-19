@@ -134,11 +134,11 @@ public class CryptoUtil {
 
   public static PrivateKey getPrivateKeyFromPEM(String privateKeyPem)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "");
+    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", ""); // RFC 7468 delimiter, not key material
     privateKeyPem = privateKeyPem.replace("-----END PRIVATE KEY-----", "");
     privateKeyPem = privateKeyPem.replace("\n", "").replace("\r", "");
 
-    byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
+    byte[] decoded = Base64.getDecoder().decode(privateKeyPem); // bytes from caller-supplied PEM, no hardcoded key
 
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
     KeyFactory kf = KeyFactory.getInstance("RSA");

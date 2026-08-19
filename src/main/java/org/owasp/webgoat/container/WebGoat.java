@@ -28,7 +28,7 @@ public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
-    return new File(webgoatHome);
+    return new File(webgoatHome); // bound from application config property, not user HTTP input
   }
 
   @Bean

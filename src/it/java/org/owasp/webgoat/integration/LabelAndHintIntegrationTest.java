@@ -164,7 +164,7 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
       lang = "_" + lang;
     }
     try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
+        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) { // lang is a hardcoded test literal
 
       prop = new Properties();
       // load a properties file

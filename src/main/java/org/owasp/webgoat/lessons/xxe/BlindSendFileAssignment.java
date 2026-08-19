@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -53,7 +54,17 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    var baseDirectory = new File(webGoatHomeDirectory, "/XXE/");
+    File targetDirectory = new File(baseDirectory, Objects.requireNonNull(user.getUsername()));
+    try {
+      if (!targetDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) { // reject username path traversal
+        log.error("Path traversal detected for username: {}", user.getUsername());
+        return;
+      }
+    } catch (IOException e) {
+      log.error("Unable to resolve canonical path for user directory", e);
+      return;
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }

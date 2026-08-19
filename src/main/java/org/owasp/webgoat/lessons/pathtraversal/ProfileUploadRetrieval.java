@@ -51,7 +51,7 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats"); // hardcoded path, no user input
     this.catPicturesDirectory.mkdirs();
   }
 
@@ -61,7 +61,12 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        File targetFile = new File(catPicturesDirectory, i + ".jpg");
+        if (!targetFile.getCanonicalPath().startsWith(catPicturesDirectory.getCanonicalPath() + File.separator)
+            && !targetFile.getCanonicalPath().equals(catPicturesDirectory.getCanonicalPath())) {
+          throw new IllegalArgumentException("Path traversal detected");
+        }
+        FileCopyUtils.copy(is, new FileOutputStream(targetFile));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
@@ -97,8 +102,22 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      int safeId;
+      try {
+        safeId = Integer.parseInt(id);
+        if (safeId < 1 || safeId > 10) {
+          safeId = RandomUtils.nextInt(1, 11);
+        }
+      } catch (NumberFormatException e) {
+        safeId = RandomUtils.nextInt(1, 11);
+      }
+      var catPicture = new File(catPicturesDirectory, safeId + ".jpg");
+      var canonicalPicturePath = catPicture.getCanonicalPath();
+      var canonicalCatDir = catPicturesDirectory.getCanonicalPath();
+      if (!canonicalPicturePath.startsWith(canonicalCatDir + File.separator)
+          && !canonicalPicturePath.equals(canonicalCatDir)) {
+        return ResponseEntity.badRequest().body("Invalid file path");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
