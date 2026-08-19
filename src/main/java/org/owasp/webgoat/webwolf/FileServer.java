@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -85,14 +86,25 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+
+    // Strip directory components from the client-supplied name to prevent path traversal (CWE-23).
+    // Paths.get(...).getFileName() discards any leading path segments (including "../" sequences).
+    String safeFilename =
+        Paths.get(multipartFile.getOriginalFilename()).getFileName().toString();
+
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(safeFilename);
+      // Verify the resolved path is still inside the intended directory.
+      if (!destinationFile.toFile().getCanonicalPath()
+          .startsWith(destinationDir.getCanonicalPath() + File.separator)) {
+        throw new IOException("Upload rejected: path traversal detected in filename");
+      }
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", new File(destinationDir, safeFilename));
 
     return new ModelAndView(
         new RedirectView("files", true),
