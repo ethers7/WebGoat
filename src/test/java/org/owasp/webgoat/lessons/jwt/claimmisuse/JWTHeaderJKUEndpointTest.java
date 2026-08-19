@@ -75,12 +75,35 @@ class JWTHeaderJKUEndpointTest extends LessonTest {
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
+  @Test
+  @DisplayName("When JKU points to an external host the call should be rejected (SSRF prevention)")
+  void shouldRejectExternalJkuHost() throws Exception {
+    var token = createTokenSignedWithExternalJku();
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/jku/delete").param("token", token).content(""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
   private String createTokenAndSignIt() {
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
     var token =
         Jwts.builder()
             .setHeaderParam("jku", "http://localhost:%d/files/jwks".formatted(port))
+            .setClaims(claims)
+            .signWith(RS256, this.keyPair.getPrivate())
+            .compact();
+    return token;
+  }
+
+  private String createTokenSignedWithExternalJku() {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("username", "Tom");
+    var token =
+        Jwts.builder()
+            .setHeaderParam("jku", "http://attacker.example.com/evil-jwks")
             .setClaims(claims)
             .signWith(RS256, this.keyPair.getPrivate())
             .compact();
