@@ -48,7 +48,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
+      var uploadedFile = new File(uploadDirectory, fullName); // INTENTIONALLY VULNERABLE: user-supplied fullName, lesson target nosemgrep: java.lang.security.audit.path-traversal
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
@@ -67,7 +67,15 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username); // nosemgrep: java.lang.security.audit.path-traversal
+    // Canonical path guard: ensure the resolved directory stays inside webGoatHomeDirectory
+    // even though username is an authenticated session value and not raw user input.
+    var canonicalBase = new File(this.webGoatHomeDirectory).getCanonicalPath(); // nosemgrep: java.lang.security.audit.path-traversal
+    var canonicalUpload = uploadDirectory.getCanonicalPath();
+    if (!canonicalUpload.startsWith(canonicalBase + File.separator)) {
+      throw new IOException(
+          "Path traversal attempt detected: resolved directory escapes home directory");
+    }
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
@@ -100,7 +108,17 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   }
 
   protected byte[] getProfilePictureAsBase64(String username) {
-    var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username); // nosemgrep: java.lang.security.audit.path-traversal
+    // Canonical path guard: ensure the resolved directory stays inside webGoatHomeDirectory.
+    try {
+      var canonicalBase = new File(this.webGoatHomeDirectory).getCanonicalPath(); // nosemgrep: java.lang.security.audit.path-traversal
+      var canonicalDir = profilePictureDirectory.getCanonicalPath();
+      if (!canonicalDir.startsWith(canonicalBase + File.separator)) {
+        return defaultImage();
+      }
+    } catch (IOException e) {
+      return defaultImage();
+    }
     var profileDirectoryFiles = profilePictureDirectory.listFiles();
 
     if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
@@ -109,7 +127,10 @@ public class ProfileUploadBase implements AssignmentEndpoint {
           .findFirst()
           .map(
               file -> {
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
+                // profileDirectoryFiles[0] comes from a directory listing under the
+                // already-validated profilePictureDirectory (canonical check above),
+                // so it is bounded to that controlled base path.
+                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) { // nosemgrep: java.lang.security.audit.path-traversal
                   return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
                 } catch (IOException e) {
                   return defaultImage();

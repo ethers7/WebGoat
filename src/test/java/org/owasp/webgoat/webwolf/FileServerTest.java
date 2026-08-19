@@ -139,6 +139,31 @@ class FileServerTest {
     }
   }
 
+  @Test
+  @DisplayName("A filename containing path traversal sequences is sanitized and stored safely")
+  void shouldSanitizePathTraversalInFilename() throws Exception {
+    // The client sends a filename with "../" sequences; the file must land inside the user dir.
+    var traversalFile =
+        new MockMultipartFile(
+            "file",
+            "../../etc/passwd",
+            "text/plain",
+            "malicious".getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalFile).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=File+uploaded+successful"));
+
+    // The file must have been written as "passwd" inside the user directory, NOT outside it.
+    Assertions.assertThat(userDirectory().resolve("passwd"))
+        .exists()
+        .content()
+        .isEqualTo("malicious");
+    // And nothing should have escaped to the parent directory.
+    Assertions.assertThat(fileServerLocation.resolve("passwd")).doesNotExist();
+  }
+
   private MockMultipartFile emptyUpload() {
     return new MockMultipartFile("file", "", "application/octet-stream", new byte[0]);
   }

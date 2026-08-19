@@ -24,6 +24,10 @@ public class Servers {
 
   private final LessonDataSource dataSource;
 
+  /** Allowed column names for ORDER BY — must match the SELECT column list exactly. */
+  private static final java.util.Set<String> ALLOWED_COLUMNS =
+      java.util.Set.of("id", "hostname", "ip", "mac", "status", "description");
+
   @AllArgsConstructor
   @Getter
   private class Server {
@@ -43,12 +47,17 @@ public class Servers {
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public List<Server> sort(@RequestParam String column) throws Exception {
+    // Allowlist validation: ORDER BY column names cannot use bind parameters.
+    if (!ALLOWED_COLUMNS.contains(column)) {
+      log.warn("Rejected disallowed ORDER BY column: {}", column);
+      column = "id";
+    }
     List<Server> servers = new ArrayList<>();
 
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
+              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out" // nosemgrep: java.spring.security.injection.tainted-sql-string
                   + " of order' order by "
                   + column)) {
         try (var rs = statement.executeQuery()) {

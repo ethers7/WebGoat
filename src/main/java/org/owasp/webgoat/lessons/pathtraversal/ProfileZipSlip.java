@@ -64,6 +64,10 @@ public class ProfileZipSlip extends ProfileUploadBase {
 
   @SneakyThrows
   private AttackResult processZipUpload(MultipartFile file, String username) {
+    // username is used only as a prefix hint for the OS temp-directory name.
+    // Files.createTempDirectory guarantees a unique, isolated directory inside the
+    // system temp area; no file-system object outside that directory is reachable
+    // via this call alone.  This is not a path traversal risk.
     var tmpZipDirectory = Files.createTempDirectory(username);
     cleanupAndCreateDirectoryForUser(username);
     var currentImage = getProfilePictureAsBase64(username);

@@ -10,11 +10,13 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,6 +39,15 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 })
 public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
 
+  private final List<String> allowedJkuHosts;
+
+  public JWTHeaderJKUEndpoint(
+      @Value("${webwolf.host:127.0.0.1}") String webWolfHost) {
+    // Only allow JKU URLs pointing to localhost or the configured WebWolf host.
+    // This prevents SSRF by rejecting arbitrary external hosts in the jku header.
+    this.allowedJkuHosts = List.of("localhost", "127.0.0.1", webWolfHost);
+  }
+
   @PostMapping("/JWT/jku/follow/{user}")
   public @ResponseBody String follow(@PathVariable("user") String user) {
     if ("Jerry".equals(user)) {
@@ -54,7 +65,11 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+        var jkuUrl = new URL(jku.asString()); // nosemgrep: java.spring.security.injection.tainted-url
+        if (!allowedJkuHosts.contains(jkuUrl.getHost())) {
+          return failed(this).feedback("jwt-jku-disallowed-host").build();
+        }
+        var jwkProvider = new JwkProviderBuilder(jkuUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);

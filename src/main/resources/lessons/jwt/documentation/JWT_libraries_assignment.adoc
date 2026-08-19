@@ -6,6 +6,7 @@ Now let's look at a code review and try to think on an attack with the `alg: non
 ----
 eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlciI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 which after decoding becomes:
 

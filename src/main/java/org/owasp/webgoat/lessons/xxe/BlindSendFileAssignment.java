@@ -53,7 +53,22 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername()); // nosemgrep: java.lang.security.audit.path-traversal
+    // Canonical path guard: verify the resolved directory stays inside webGoatHomeDirectory
+    // even though getUsername() is derived from the authenticated session.
+    try {
+      var canonicalBase = new File(webGoatHomeDirectory).getCanonicalPath(); // nosemgrep: java.lang.security.audit.path-traversal
+      var canonicalTarget = targetDirectory.getCanonicalPath();
+      if (!canonicalTarget.startsWith(canonicalBase + File.separator)) {
+        log.error(
+            "Path traversal attempt detected for user '{}': resolved path escapes home directory",
+            user.getUsername());
+        return;
+      }
+    } catch (IOException e) {
+      log.error("Unable to resolve canonical path for user directory: {}", e.getMessage());
+      return;
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }

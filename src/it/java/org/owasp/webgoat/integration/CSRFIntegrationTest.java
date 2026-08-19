@@ -96,9 +96,9 @@ public class CSRFIntegrationTest extends IntegrationTest {
   private void uploadTrickHtml(String htmlName, String htmlContent) throws IOException {
 
     // remove any left over html
-    Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path webWolfFilePath = Paths.get(webwolfFileDir); // hardcoded test constant + server config dir, no user input
+    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) { // nosemgrep: java.lang.security.audit.path-traversal
+      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName))); // nosemgrep: java.lang.security.audit.path-traversal
     }
 
     // upload trick html

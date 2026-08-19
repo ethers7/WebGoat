@@ -13,12 +13,16 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class LabelAndHintIntegrationTest extends IntegrationTest {
 
   static final String ESCAPE_JSON_PATH_CHAR = "\'";
+
+  /** Allowlist of language codes that have a corresponding messages_<code>.properties file. */
+  private static final Set<String> ALLOWED_LANG_CODES = Set.of("nl", "de", "fr", "es");
 
   @Test
   public void testSingleLabel() {
@@ -158,13 +162,20 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
 
   private Properties getProperties(String lang) {
     Properties prop = null;
+    // Validate lang against an allowlist of known language codes before embedding it in a
+    // file path.  An empty/null value maps to the default (English) properties file.
+    // Any unrecognised code is rejected to prevent path traversal via lang values such as
+    // "../../../etc/passwd" or "%2F..".
+    String safeLang;
     if (lang == null || lang.equals("")) {
-      lang = "";
+      safeLang = "";
+    } else if (ALLOWED_LANG_CODES.contains(lang)) {
+      safeLang = "_" + lang;
     } else {
-      lang = "_" + lang;
+      throw new IllegalArgumentException("Unsupported language code: " + lang);
     }
     try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
+        new FileInputStream("src/main/resources/i18n/messages" + safeLang + ".properties")) {
 
       prop = new Properties();
       // load a properties file

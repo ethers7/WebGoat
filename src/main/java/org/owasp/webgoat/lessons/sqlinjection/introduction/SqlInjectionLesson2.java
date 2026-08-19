@@ -46,7 +46,7 @@ public class SqlInjectionLesson2 implements AssignmentEndpoint {
   protected AttackResult injectableQuery(String query) {
     try (var connection = dataSource.getConnection()) {
       Statement statement = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
-      ResultSet results = statement.executeQuery(query);
+      ResultSet results = statement.executeQuery(query); // INTENTIONALLY VULNERABLE nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
       StringBuilder output = new StringBuilder();
 
       if(!results.first()) {

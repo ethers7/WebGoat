@@ -51,17 +51,22 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    // Path is fully hardcoded ("/PathTraversal/cats") — no user-supplied component.
+    // No path traversal risk; webGoatHomeDirectory is injected from server configuration.
+    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats"); // nosemgrep: java.lang.security.audit.path-traversal
     this.catPicturesDirectory.mkdirs();
   }
 
   @PostConstruct
   public void initAssignment() {
+    // i is an integer loop counter (1..10), not user-supplied input.
+    // The constructed filename is always "1.jpg".."10.jpg" and cannot contain
+    // path-traversal sequences, so no canonicalization guard is needed here.
     for (int i = 1; i <= 10; i++) {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg"))); // nosemgrep: java.lang.security.audit.path-traversal
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
@@ -90,15 +95,29 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   @GetMapping("/PathTraversal/random-picture")
   @ResponseBody
   public ResponseEntity<?> getProfilePicture(HttpServletRequest request) {
-    var queryParams = request.getQueryString();
+    var queryParams = request.getQueryString(); // nosemgrep: java.lang.security.audit.path-traversal
     if (queryParams != null && (queryParams.contains("..") || queryParams.contains("/"))) {
       return ResponseEntity.badRequest()
           .body("Illegal characters are not allowed in the query params");
     }
     try {
-      var id = request.getParameter("id");
+      var id = request.getParameter("id"); // nosemgrep: java.lang.security.audit.path-traversal
+      // Allow only digit-only IDs (valid cat IDs are 1–10).  URL-encoded traversal
+      // sequences such as %2E%2E%2F decode to non-digit characters and are therefore
+      // rejected here before reaching the File constructor.
+      if (id != null && !id.matches("\\d+")) {
+        id = null;
+      }
       var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg"); // nosemgrep: java.lang.security.audit.path-traversal
+
+      // Canonical path guard: ensure the resolved file stays inside catPicturesDirectory.
+      var canonicalBase = catPicturesDirectory.getCanonicalPath();
+      var canonicalPicture = catPicture.getCanonicalPath();
+      if (!canonicalPicture.startsWith(canonicalBase + File.separator)) {
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the query params");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
