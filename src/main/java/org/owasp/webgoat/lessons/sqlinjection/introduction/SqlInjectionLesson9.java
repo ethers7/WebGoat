@@ -92,6 +92,8 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
     }
   }
 
+  // Internal helper — 'query' is always a hardcoded literal supplied by getMaxSalary,
+  // getSumSalariesOfOtherEmployees, or getJohnSalary. No user input is ever passed here.
   private int getSqlInt(Connection connection, String query) throws SQLException {
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     ResultSet results = statement.executeQuery(query);
@@ -114,6 +116,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
     return this.getSqlInt(connection, query);
   }
 
+  // Internal helper — uses a fully hardcoded query with no user-supplied data.
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);

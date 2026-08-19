@@ -69,6 +69,9 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     try (Statement statement =
         connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
 
+      // INTENTIONALLY VULNERABLE: 'query' is built from user-supplied 'accountName' via string
+      // concatenation. This is the deliberate lesson target for advanced SQL injection (UNION-based).
+      // Do NOT apply PreparedStatement here.
       ResultSet results = statement.executeQuery(query);
 
       if (!((results != null) && results.first())) {

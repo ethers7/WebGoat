@@ -7,6 +7,7 @@ package org.owasp.webgoat.container.users;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.owasp.webgoat.container.lessons.Initializable;
@@ -74,9 +75,18 @@ public class UserService implements UserDetailsService {
     mailboxRepository.save(welcome);
   }
 
+  // Only alphanumeric characters and underscores are allowed in a schema name to prevent
+  // SQL injection via DDL (JDBC does not support parameterized CREATE SCHEMA statements).
+  private static final Pattern SAFE_USERNAME = Pattern.compile("^[a-zA-Z0-9_]+$");
+
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    String username = webGoatUser.getUsername();
+    if (!SAFE_USERNAME.matcher(username).matches()) {
+      throw new IllegalArgumentException(
+          "Invalid username — only letters, digits, and underscores are allowed: " + username);
+    }
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba");
+    flywayLessons.apply(username).migrate();
   }
 
   public List<WebGoatUser> getAllUsers() {
