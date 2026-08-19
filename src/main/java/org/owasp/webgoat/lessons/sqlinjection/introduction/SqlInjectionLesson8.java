@@ -59,7 +59,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE); // INTENTIONALLY VULNERABLE
         log(connection, query);
-        ResultSet results = statement.executeQuery(query);
+        ResultSet results = statement.executeQuery(query); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
 
         if (results.getStatement() != null) {
           if (results.first()) {
@@ -139,7 +139,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
 
     try {
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      statement.executeUpdate(logQuery);
+      statement.executeUpdate(logQuery); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
     } catch (SQLException e) {
       System.err.println(e.getMessage());
     }

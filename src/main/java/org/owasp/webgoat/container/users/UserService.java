@@ -85,7 +85,7 @@ public class UserService implements UserDetailsService {
       throw new IllegalArgumentException(
           "Invalid username — only letters, digits, and underscores are allowed: " + username);
     }
-    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba");
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba"); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
     flywayLessons.apply(username).migrate();
   }
 

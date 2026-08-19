@@ -66,7 +66,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
       // String query = "SELECT * FROM user_data WHERE Login_Count = " + login_count + " and userid
       // = " + accountName, ;
       try {
-        ResultSet results = query.executeQuery();
+        ResultSet results = query.executeQuery(); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
 
         if ((results != null) && (results.first() == true)) {
           ResultSetMetaData resultsMetaData = results.getMetaData();

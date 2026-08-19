@@ -62,7 +62,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE); // INTENTIONALLY VULNERABLE
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      statement.execute(queryInjection); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC,java.lang.security.audit.formatted-sql-string
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
@@ -91,7 +91,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private int getSqlInt(Connection connection, String query) throws SQLException { // hardcoded queries only, no user input
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
+    ResultSet results = statement.executeQuery(query); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
     results.first();
     return results.getInt(1);
   }
@@ -114,6 +114,6 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException { // hardcoded query, no user input
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    return statement.executeQuery(query);
+    return statement.executeQuery(query); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
   }
 }

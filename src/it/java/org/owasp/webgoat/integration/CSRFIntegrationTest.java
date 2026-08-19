@@ -97,8 +97,8 @@ public class CSRFIntegrationTest extends IntegrationTest {
 
     // remove any left over html
     Path webWolfFilePath = Paths.get(webwolfFileDir); // hardcoded test constant + server config dir, no user input
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) { // nosemgrep: java.lang.security.audit.path-traversal
+      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName))); // nosemgrep: java.lang.security.audit.path-traversal
     }
 
     // upload trick html

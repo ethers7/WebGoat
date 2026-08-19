@@ -46,7 +46,7 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
         Statement statement =
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        ResultSet results = statement.executeQuery(query);
+        ResultSet results = statement.executeQuery(query); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
 
         if (results != null && results.first()) {
           password = results.getString("password");

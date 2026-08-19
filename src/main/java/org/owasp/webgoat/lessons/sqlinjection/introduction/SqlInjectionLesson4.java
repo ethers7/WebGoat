@@ -43,7 +43,7 @@ public class SqlInjectionLesson4 implements AssignmentEndpoint {
     try (Connection connection = dataSource.getConnection()) {
       try (Statement statement =
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
-        statement.executeUpdate(query); // INTENTIONALLY VULNERABLE
+        statement.executeUpdate(query); // INTENTIONALLY VULNERABLE nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
         connection.commit();
         ResultSet results = statement.executeQuery("SELECT phone from employees;"); // hardcoded, no user input
         StringBuilder output = new StringBuilder();

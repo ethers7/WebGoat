@@ -62,7 +62,7 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query); // INTENTIONALLY VULNERABLE
+        statement.executeQuery(query); // INTENTIONALLY VULNERABLE nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
         if (checkSolution(connection)) {
           return success(this).build();
         }

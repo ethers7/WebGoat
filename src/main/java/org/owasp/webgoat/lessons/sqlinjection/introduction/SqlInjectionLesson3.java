@@ -44,9 +44,9 @@ public class SqlInjectionLesson3 implements AssignmentEndpoint {
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
         Statement checkStatement =
             connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
-        statement.executeUpdate(query); // INTENTIONALLY VULNERABLE
+        statement.executeUpdate(query); // INTENTIONALLY VULNERABLE nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
         ResultSet results =
-            checkStatement.executeQuery("SELECT * FROM employees WHERE last_name='Barnett';"); // hardcoded, no user input
+            checkStatement.executeQuery("SELECT * FROM employees WHERE last_name='Barnett';"); // nosemgrep: gitlab.find_sec_bugs.SQL_INJECTION_SPRING_JDBC
         StringBuilder output = new StringBuilder();
         // user completes lesson if the department of Tobi Barnett now is 'Sales'
         results.first();

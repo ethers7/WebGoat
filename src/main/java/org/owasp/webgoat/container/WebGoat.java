@@ -30,7 +30,7 @@ public class WebGoat {
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
     // webgoatHome is injected from server configuration (application properties), not from
     // user-supplied input.  No path traversal risk at this point.
-    return new File(webgoatHome);
+    return new File(webgoatHome); // nosemgrep: java.lang.security.audit.path-traversal
   }
 
   @Bean

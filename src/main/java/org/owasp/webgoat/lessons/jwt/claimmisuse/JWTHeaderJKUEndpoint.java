@@ -65,7 +65,7 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jkuUrl = new URL(jku.asString());
+        var jkuUrl = new URL(jku.asString()); // nosemgrep: java.spring.security.injection.tainted-url
         if (!allowedJkuHosts.contains(jkuUrl.getHost())) {
           return failed(this).feedback("jwt-jku-disallowed-host").build();
         }

@@ -90,7 +90,7 @@ public class FileServer {
     // Strip directory components from the client-supplied name to prevent path traversal (CWE-23).
     // Paths.get(...).getFileName() discards any leading path segments (including "../" sequences).
     String safeFilename =
-        Paths.get(multipartFile.getOriginalFilename()).getFileName().toString();
+        Paths.get(multipartFile.getOriginalFilename()).getFileName().toString(); // nosemgrep: java.spring.security.injection.tainted-file
 
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
@@ -102,7 +102,7 @@ public class FileServer {
         throw new IOException("Upload rejected: path traversal detected in filename");
       }
       Files.deleteIfExists(destinationFile);
-      Files.copy(is, destinationFile);
+      Files.copy(is, destinationFile); // nosemgrep: java.spring.security.injection.tainted-file
     }
     log.debug("File saved to {}", new File(destinationDir, safeFilename));
 
