@@ -55,8 +55,6 @@ public class SqlInjectionChallenge implements AssignmentEndpoint {
     if (attackResult.assignmentSolved()) {
 
       try (Connection connection = dataSource.getConnection()) {
-        // Already using PreparedStatement with bound parameters — no SQL injection risk.
-        // The challenge asks students to exploit the registration flow, not this check query.
         PreparedStatement statement =
             connection.prepareStatement(
                 "select userid from sql_challenge_users where userid = ?");

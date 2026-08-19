@@ -42,8 +42,6 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String login_count, String accountName) {
-    // Already using PreparedStatement with bound parameters — no SQL injection risk.
-    // Lesson 5b teaches students that PreparedStatement prevents injection.
     String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= ?";
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =

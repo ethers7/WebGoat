@@ -62,9 +62,6 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        // INTENTIONAL VULNERABILITY (Lesson 5): students must craft a SQL injection via
-        // the 'query' parameter to grant privileges to unauthorized_user.
-        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         statement.executeQuery(query);
         if (checkSolution(connection)) {
           return success(this).build();

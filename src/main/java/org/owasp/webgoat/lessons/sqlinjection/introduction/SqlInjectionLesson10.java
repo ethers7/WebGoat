@@ -53,9 +53,6 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
         Statement statement =
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        // INTENTIONAL VULNERABILITY (Lesson 10): students must inject a DROP TABLE via the
-        // 'action_string' parameter to delete the access_log table (availability lesson).
-        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         ResultSet results = statement.executeQuery(query);
 
         if (results.getStatement() != null) {
@@ -100,7 +97,6 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
     try {
       Statement stmt =
           connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-      // FALSE POSITIVE (static analysis): query is fully hardcoded; no user input involved.
       ResultSet results = stmt.executeQuery("SELECT * FROM access_log");
       int cols = results.getMetaData().getColumnCount();
       return (cols > 0);

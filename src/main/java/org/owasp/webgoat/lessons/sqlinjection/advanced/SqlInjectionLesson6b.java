@@ -41,8 +41,6 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   protected String getPassword() {
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
-      // FALSE POSITIVE (static analysis): query is fully hardcoded; no user input involved.
-      // Lesson 6b checks the student's answer against the value obtained via lesson 6a injection.
       String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
       try {
         Statement statement =

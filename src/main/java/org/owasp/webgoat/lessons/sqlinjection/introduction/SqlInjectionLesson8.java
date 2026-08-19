@@ -57,9 +57,6 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         log(connection, query);
-        // INTENTIONAL VULNERABILITY (Lesson 8): students must inject via 'name' or 'auth_tan'
-        // to return more than one employee row (confidentiality lesson).
-        // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
         ResultSet results = statement.executeQuery(query);
 
         if (results.getStatement() != null) {
@@ -137,8 +134,6 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
     String logQuery = "INSERT INTO access_log (time, action) VALUES (?, ?)";
 
     try {
-      // FALSE POSITIVE (static analysis): logQuery uses '?' placeholders; 'action' is bound as a
-      // parameter value via PreparedStatement — no SQL injection risk here.
       PreparedStatement statement = connection.prepareStatement(logQuery);
       statement.setString(1, time);
       statement.setString(2, action);

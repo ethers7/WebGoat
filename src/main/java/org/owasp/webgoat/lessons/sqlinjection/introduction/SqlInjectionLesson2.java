@@ -45,9 +45,6 @@ public class SqlInjectionLesson2 implements AssignmentEndpoint {
 
   protected AttackResult injectableQuery(String query) {
     try (var connection = dataSource.getConnection()) {
-      // INTENTIONAL VULNERABILITY (Lesson 2): students must supply a valid SQL query
-      // that returns a row with department = 'Marketing'. The entire query is user-supplied.
-      // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
       Statement statement = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
       ResultSet results = statement.executeQuery(query);
       StringBuilder output = new StringBuilder();

@@ -60,9 +60,6 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // begin transaction
       connection.setAutoCommit(false);
       // do injectable query
-      // INTENTIONAL VULNERABILITY (Lesson 9): students must inject a salary UPDATE into the
-      // 'name' or 'auth_tan' parameter while keeping the transaction valid.
-      // Do NOT replace with a PreparedStatement — the lesson requires this to be injectable.
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
       statement.execute(queryInjection);
@@ -93,8 +90,6 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    // FALSE POSITIVE (static analysis): all callers pass fully hardcoded SQL strings;
-    // no user input is forwarded to this helper method.
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     ResultSet results = statement.executeQuery(query);
     results.first();
@@ -117,7 +112,6 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
-    // FALSE POSITIVE (static analysis): query is fully hardcoded; no user input involved.
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     return statement.executeQuery(query);
