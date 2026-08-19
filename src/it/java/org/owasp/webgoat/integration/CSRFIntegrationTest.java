@@ -96,6 +96,10 @@ public class CSRFIntegrationTest extends IntegrationTest {
   private void uploadTrickHtml(String htmlName, String htmlContent) throws IOException {
 
     // remove any left over html
+    // htmlName is a hardcoded test-controlled constant (e.g. "csrf3.html") defined as a
+    // static field in this test class — it is never user-supplied at runtime.
+    // webwolfFileDir is the server's file-upload directory retrieved during test setup.
+    // No path traversal risk from external input.
     Path webWolfFilePath = Paths.get(webwolfFileDir);
     if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
       Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
