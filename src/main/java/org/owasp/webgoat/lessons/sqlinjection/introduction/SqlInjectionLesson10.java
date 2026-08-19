@@ -46,6 +46,9 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
 
   protected AttackResult injectableQueryAvailability(String action) {
     StringBuilder output = new StringBuilder();
+    // INTENTIONALLY VULNERABLE: 'action' from user input is concatenated into the query.
+    // This is the deliberate lesson target for SQL injection — availability (DROP TABLE).
+    // Do NOT apply PreparedStatement here.
     String query = "SELECT * FROM access_log WHERE action LIKE '%" + action + "%'";
 
     try (Connection connection = dataSource.getConnection()) {

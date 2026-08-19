@@ -55,6 +55,9 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
 
     try (Connection connection = dataSource.getConnection()) {
       try {
+        // INTENTIONALLY VULNERABLE: query is built from user-supplied 'name' and 'auth_tan'
+        // via string concatenation. This is the deliberate lesson target for SQL injection —
+        // confidentiality (data disclosure). Do NOT apply PreparedStatement here.
         Statement statement =
             connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
@@ -134,6 +137,9 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     String time = sdf.format(cal.getTime());
 
+    // INTENTIONALLY VULNERABLE: logQuery is built via string concatenation so that students
+    // can observe log injection as part of the SQL injection availability lesson (Lesson 10).
+    // Do NOT apply PreparedStatement here.
     String logQuery =
         "INSERT INTO access_log (time, action) VALUES ('" + time + "', '" + action + "')";
 

@@ -44,6 +44,9 @@ public class SqlInjectionLesson5a implements AssignmentEndpoint {
   protected AttackResult injectableQuery(String accountName) {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
+      // INTENTIONALLY VULNERABLE: 'accountName' is concatenated from user-supplied request
+      // parameters to allow classic OR-based SQL injection. This is the deliberate lesson
+      // target for SQL injection — confidentiality. Do NOT apply PreparedStatement here.
       query =
           "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
       try (Statement statement =

@@ -60,6 +60,9 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // begin transaction
       connection.setAutoCommit(false);
       // do injectable query
+      // INTENTIONALLY VULNERABLE: SQL is constructed from user-supplied 'name' and 'auth_tan'
+      // parameters via string concatenation. This is the deliberate lesson target for
+      // SQL injection — integrity (modifying data). Do NOT apply PreparedStatement here.
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
       statement.execute(queryInjection);
