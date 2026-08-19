@@ -62,10 +62,7 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
       try (Statement statement =
           connection.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        // INTENTIONALLY VULNERABLE: 'query' is the raw user-supplied SQL string. This is the
-        // deliberate lesson target for SQL injection intro (DCL/GRANT). Do NOT apply
-        // PreparedStatement here.
-        statement.executeQuery(query);
+        statement.executeQuery(query); // INTENTIONALLY VULNERABLE
         if (checkSolution(connection)) {
           return success(this).build();
         }

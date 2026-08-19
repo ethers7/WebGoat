@@ -41,9 +41,7 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   protected String getPassword() {
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
-      // Hardcoded SQL with no user input — not a SQL injection risk. This method is an internal
-      // helper that retrieves the expected password for the advanced SQL injection lesson (6b).
-      String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
+      String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'"; // hardcoded, no user input
       try {
         Statement statement =
             connection.createStatement(

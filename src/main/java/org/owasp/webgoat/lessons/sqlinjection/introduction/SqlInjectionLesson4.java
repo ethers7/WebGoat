@@ -43,12 +43,9 @@ public class SqlInjectionLesson4 implements AssignmentEndpoint {
     try (Connection connection = dataSource.getConnection()) {
       try (Statement statement =
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
-        // INTENTIONALLY VULNERABLE: 'query' is the raw user-supplied SQL DDL/DML string. This is
-        // the deliberate lesson target for SQL injection intro (DDL). Do NOT apply PreparedStatement.
-        statement.executeUpdate(query);
+        statement.executeUpdate(query); // INTENTIONALLY VULNERABLE
         connection.commit();
-        // Hardcoded SQL with no user input — not a SQL injection risk.
-        ResultSet results = statement.executeQuery("SELECT phone from employees;");
+        ResultSet results = statement.executeQuery("SELECT phone from employees;"); // hardcoded, no user input
         StringBuilder output = new StringBuilder();
         // user completes lesson if column phone exists
         if (results.first()) {

@@ -48,11 +48,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      // Intentional path traversal vulnerability: fullName is user-supplied and is
-      // deliberately NOT sanitised here.  This method is the WebGoat lesson endpoint
-      // that teaches students about path traversal attacks; attemptWasMade() below
-      // detects a successful traversal and marks the assignment solved.
-      var uploadedFile = new File(uploadDirectory, fullName);
+      var uploadedFile = new File(uploadDirectory, fullName); // INTENTIONALLY VULNERABLE: user-supplied fullName, lesson target
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 

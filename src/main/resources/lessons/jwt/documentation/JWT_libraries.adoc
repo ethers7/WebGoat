@@ -23,26 +23,26 @@ claims:
 }
 ----
 
-// DEMO TOKEN - not a real secret - used for educational JWT lesson
 [source]
 ----
 var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.NFvYpuwbF6YWbPyaNAGEPw9wbhiQSovvSrD89B8K7Ng";
 
 Jwts.parser().setSigningKey("test").parseClaimsJws(token);
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 will work!
 
 Let's change the header to `{"alg":"none","typ":"JWT"}`
 Using the same source as above gives:
 
-// DEMO TOKEN - not a real secret - used for educational JWT lesson
 [source]
 ----
 var token = " eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.NFvYpuwbF6YWbPyaNAGEPw9wbhiQSovvSrD89B8K7Ng";
 
 Jwts.parser().setSigningKey("test").parseClaimsJws(token);
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 will result in:
 
@@ -53,13 +53,13 @@ io.jsonwebtoken.MalformedJwtException: JWT string has a digest/signature, but th
 
 removing the signature completely (leaving the last `.`)
 
-// DEMO TOKEN - not a real secret - used for educational JWT lesson
 [source]
 ----
 var token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.";
 
 Jwts.parser().setSigningKey("test").parseClaimsJws(token);
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 will result in:
 

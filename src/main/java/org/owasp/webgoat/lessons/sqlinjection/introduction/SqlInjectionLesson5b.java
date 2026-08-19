@@ -42,11 +42,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String login_count, String accountName) {
-    // INTENTIONALLY VULNERABLE: 'accountName' (userid) is concatenated directly into queryString
-    // while only Login_Count uses a parameterised placeholder. This intentional partial
-    // parameterisation demonstrates numeric-field injection for the SQL injection lesson.
-    // Do NOT fully parameterise this query.
-    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName;
+    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName; // INTENTIONALLY VULNERABLE
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =
           connection.prepareStatement(

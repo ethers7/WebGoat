@@ -28,13 +28,13 @@ What basically happened was that libraries just parsed the token as it was given
 First note that we are logged in as `Guest` so first select a different user for example: Tom.
 User Tom is allowed to vote as you can see, but he is unable to reset the votes. Looking at the request this will return an `access_token` in the response:
 
-// DEMO TOKEN - not a real secret - used for educational JWT lesson
 [source]
 ----
 GET http://localhost:8080/WebGoat/JWT/votings/login?user=Tom HTTP/1.1
 
 access_token=eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE2MDgxMjg1NjYsImFkbWluIjoiZmFsc2UiLCJ1c2VyIjoiVG9tIn0.rTSX6PSXqUoGUvQQDBiqX0re2BSt7s2-X6FPf34Qly9SMpqIUSP8jykedJbjOBNlM3_CTjgk1SvUv48Pz8zIzA
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 Decoding the token gives:
 
@@ -73,11 +73,11 @@ claims:
 
 If we use WebWolf to create our token we get:
 
-// DEMO TOKEN - not a real secret - used for educational JWT lesson
 [source]
 ----
 eyJhbGciOiJub25lIn0.ew0KICAiYWRtaW4iIDogInRydWUiLA0KICAiaWF0IiA6IDE2MDgxMjg1NjYsDQogICJ1c2VyIiA6ICJUb20iDQp9
 ----
+// DEMO TOKEN - not a real secret - used for educational JWT lesson
 
 Now we can replace the token in the cookie and perform the reset again. One thing to watch out for is to add a `.` at the end otherwise the token is not valid.
 

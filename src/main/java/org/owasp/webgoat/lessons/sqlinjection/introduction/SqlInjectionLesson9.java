@@ -60,10 +60,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // begin transaction
       connection.setAutoCommit(false);
       // do injectable query
-      // INTENTIONALLY VULNERABLE: SQL is constructed from user-supplied 'name' and 'auth_tan'
-      // parameters via string concatenation. This is the deliberate lesson target for
-      // SQL injection — integrity (modifying data). Do NOT apply PreparedStatement here.
-      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE); // INTENTIONALLY VULNERABLE
       SqlInjectionLesson8.log(connection, queryInjection);
       statement.execute(queryInjection);
       // check new sum of salaries other employees and new salaries of John
@@ -92,9 +89,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
     }
   }
 
-  // Internal helper — 'query' is always a hardcoded literal supplied by getMaxSalary,
-  // getSumSalariesOfOtherEmployees, or getJohnSalary. No user input is ever passed here.
-  private int getSqlInt(Connection connection, String query) throws SQLException {
+  private int getSqlInt(Connection connection, String query) throws SQLException { // hardcoded queries only, no user input
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     ResultSet results = statement.executeQuery(query);
     results.first();
@@ -116,8 +111,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
     return this.getSqlInt(connection, query);
   }
 
-  // Internal helper — uses a fully hardcoded query with no user-supplied data.
-  private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
+  private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException { // hardcoded query, no user input
     String query = "SELECT * FROM employees ORDER BY salary DESC";
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
     return statement.executeQuery(query);

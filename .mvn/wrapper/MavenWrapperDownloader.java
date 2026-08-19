@@ -57,11 +57,7 @@ public class MavenWrapperDownloader {
         if(mavenWrapperPropertyFile.exists()) {
             FileInputStream mavenWrapperPropertyFileInputStream = null;
             try {
-                // mavenWrapperPropertyFile is constructed from a hardcoded relative path
-                // (MAVEN_WRAPPER_PROPERTIES_PATH = ".mvn/wrapper/maven-wrapper.properties") resolved
-                // against the build base directory supplied by the Maven launcher — not from
-                // user-supplied web input.  This is standard Maven wrapper boilerplate.
-                mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
+                mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile); // hardcoded path, Maven launcher input only
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);
                 url = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
