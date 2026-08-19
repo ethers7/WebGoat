@@ -49,10 +49,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      // Intentional path traversal vulnerability for the WebGoat lesson:
-      // fullName is the user-supplied filename that students exploit to escape uploadDirectory.
-      // The lesson measures success via attemptWasMade() below. Do not sanitize fullName here.
-      var uploadedFile = new File(uploadDirectory, fullName);
+      var uploadedFile = new File(uploadDirectory, fullName); // intentional lesson vulnerability: fullName is user-controlled
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
@@ -73,9 +70,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   protected File cleanupAndCreateDirectoryForUser(String username) {
     var baseDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/");
     var uploadDirectory = new File(baseDirectory, Objects.requireNonNull(username));
-    // Prevent path traversal via a malicious username: ensure the resolved canonical
-    // path stays within the expected base directory.
-    if (!uploadDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) {
+    if (!uploadDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) { // reject username path traversal
       throw new SecurityException("Path traversal detected in username: " + username);
     }
     if (uploadDirectory.exists()) {
@@ -112,10 +107,8 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   protected byte[] getProfilePictureAsBase64(String username) {
     var baseDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/");
     var profilePictureDirectory = new File(baseDirectory, Objects.requireNonNull(username));
-    // Prevent path traversal via a malicious username: ensure the resolved canonical
-    // path stays within the expected base directory.
     try {
-      if (!profilePictureDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) {
+      if (!profilePictureDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) { // reject username path traversal
         return defaultImage();
       }
     } catch (IOException e) {
@@ -129,8 +122,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
           .findFirst()
           .map(
               file -> {
-                // profileDirectoryFiles[0] comes from a directory listing, not user input.
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
+                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) { // from directory listing, not user input
                   return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
                 } catch (IOException e) {
                   return defaultImage();

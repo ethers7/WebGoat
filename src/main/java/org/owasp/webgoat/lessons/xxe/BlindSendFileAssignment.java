@@ -56,10 +56,8 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
     userToFileContents.put(user, fileContents);
     var baseDirectory = new File(webGoatHomeDirectory, "/XXE/");
     File targetDirectory = new File(baseDirectory, Objects.requireNonNull(user.getUsername()));
-    // Prevent path traversal via a malicious username: ensure the resolved canonical
-    // path stays within the expected base directory.
     try {
-      if (!targetDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) {
+      if (!targetDirectory.getCanonicalPath().startsWith(baseDirectory.getCanonicalPath())) { // reject username path traversal
         log.error("Path traversal detected for username: {}", user.getUsername());
         return;
       }

@@ -54,9 +54,7 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        // SSRF guard: only allow trusted hosts for JKU resolution.
-        // Rotate/revoke any credentials if a real SSRF was previously exploited.
-        var jkuUrl = new URL(jku.asString());
+        var jkuUrl = new URL(jku.asString()); // host checked against allowlist below before use
         var jkuHost = jkuUrl.getHost();
         if (!"localhost".equals(jkuHost)) {
           return failed(this).feedback("jwt-invalid-token").build();

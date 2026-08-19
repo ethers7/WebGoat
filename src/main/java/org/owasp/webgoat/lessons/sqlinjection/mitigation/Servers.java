@@ -56,6 +56,7 @@ public class Servers {
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
+              // column is validated against ALLOWED_COLUMNS above; ORDER BY cannot use ? placeholders
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
                   + " of order' order by "
                   + column)) {

@@ -95,9 +95,7 @@ public class CSRFIntegrationTest extends IntegrationTest {
 
   private void uploadTrickHtml(String htmlName, String htmlContent) throws IOException {
 
-    // remove any left over html
-    // Not a path traversal risk: htmlName is always a hardcoded literal (e.g. "csrf3.html")
-    // passed from test methods above — it is never user-controlled HTTP input.
+    // remove any left over html (htmlName is always a hardcoded test literal — no user input)
     Path webWolfFilePath = Paths.get(webwolfFileDir);
     if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
       Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));

@@ -28,9 +28,7 @@ public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
-    // Not a path traversal risk: webgoatHome is bound from the application configuration
-    // property "webgoat.user.directory" via Spring @Value — it is not user-supplied HTTP input.
-    return new File(webgoatHome);
+    return new File(webgoatHome); // bound from application config property, not user HTTP input
   }
 
   @Bean

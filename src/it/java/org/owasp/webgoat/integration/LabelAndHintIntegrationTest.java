@@ -163,10 +163,8 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
     } else {
       lang = "_" + lang;
     }
-    // Not a path traversal risk: lang is always one of the hardcoded literals "", "nl", "de", "fr"
-    // (see testLabels() callers) — it is never derived from user-supplied HTTP input.
     try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
+        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) { // lang is a hardcoded test literal
 
       prop = new Properties();
       // load a properties file

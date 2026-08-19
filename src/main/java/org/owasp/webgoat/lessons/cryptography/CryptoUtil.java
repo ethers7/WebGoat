@@ -132,28 +132,13 @@ public class CryptoUtil {
     return result;
   }
 
-  /**
-   * Converts a caller-supplied PEM-formatted private key string to a {@link PrivateKey} object.
-   *
-   * <p>No key material is hardcoded in this method. The {@code privateKeyPem} parameter must be
-   * provided by the caller (e.g. loaded from a keystore, an environment variable, or generated
-   * at runtime via {@link #generateKeyPair()}). The PEM header/footer strings used below are
-   * standard delimiters defined by RFC 7468 — they are not cryptographic key material.
-   *
-   * <p>Note: if you are integrating this utility in production code, ensure that the private key
-   * is sourced from a secure secrets manager or environment variable, and never hardcoded in
-   * source. Any key that was previously committed to version control must be rotated immediately.
-   */
   public static PrivateKey getPrivateKeyFromPEM(String privateKeyPem)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-    // Strip standard RFC 7468 PEM delimiters — these are format markers, not key material.
-    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "");
+    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", ""); // RFC 7468 delimiter, not key material
     privateKeyPem = privateKeyPem.replace("-----END PRIVATE KEY-----", "");
     privateKeyPem = privateKeyPem.replace("\n", "").replace("\r", "");
 
-    // decoded holds the DER-encoded key bytes derived solely from the privateKeyPem parameter;
-    // there is no hardcoded key value here — the bytes originate entirely from the caller.
-    byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
+    byte[] decoded = Base64.getDecoder().decode(privateKeyPem); // bytes from caller-supplied PEM, no hardcoded key
 
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
     KeyFactory kf = KeyFactory.getInstance("RSA");

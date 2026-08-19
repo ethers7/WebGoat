@@ -76,16 +76,11 @@ public class UserService implements UserDetailsService {
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
     String username = webGoatUser.getUsername();
-    // Validate username before embedding it in a DDL statement to prevent SQL injection.
-    // The double-quoted HSQLDB identifier syntax means the critical character to block is '"'.
-    // Allowlist: alphanumeric, underscore, hyphen, dot, and '@' (covers email-style OAuth names)
-    // all of which are safe inside a double-quoted SQL identifier. Max length 64 chars.
-    if (username == null || !username.matches("[a-zA-Z0-9@._-]{1,64}")) {
+    if (username == null || !username.matches("[a-zA-Z0-9@._-]{1,64}")) { // allowlist before DDL to prevent injection
       throw new IllegalArgumentException(
-          "Invalid username for schema creation: must contain only alphanumeric characters,"
-              + " hyphens, underscores, dots, or '@', with a maximum length of 64 characters.");
+          "Invalid username for schema creation: must be alphanumeric/@._- max 64 chars.");
     }
-    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba");
+    jdbcTemplate.execute("CREATE SCHEMA \"" + username + "\" authorization dba"); // username allowlisted above
     flywayLessons.apply(username).migrate();
   }
 

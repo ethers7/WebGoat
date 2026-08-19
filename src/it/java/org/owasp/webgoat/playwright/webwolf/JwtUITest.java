@@ -27,7 +27,6 @@ class JwtUITest extends PlaywrightTest {
   void shouldDecodeJwt(Browser browser) {
     var page = Authentication.sylvester(browser);
     var secretKey = "test";
-    // Demo-only JWT token for UI test — not a live credential, no signing key associated
     var jwt =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 
