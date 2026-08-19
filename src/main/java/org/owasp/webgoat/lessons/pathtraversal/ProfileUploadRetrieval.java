@@ -57,6 +57,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
 
   @PostConstruct
   public void initAssignment() {
+    // i is an integer loop counter (1..10), not user-supplied input.
+    // The constructed filename is always "1.jpg".."10.jpg" and cannot contain
+    // path-traversal sequences, so no canonicalization guard is needed here.
     for (int i = 1; i <= 10; i++) {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
