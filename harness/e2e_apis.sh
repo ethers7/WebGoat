@@ -120,8 +120,25 @@ code="$(http_code -c "$COOKIE" -b "$COOKIE" "$BASE_URL/service/lessonmenu.mvc")"
 assert_code "$code" "200" "GET /service/lessonmenu.mvc (authed)"
 if json_ok 'import json,os; d=json.load(open(os.environ["BODY"])); assert isinstance(d, list) and len(d) >= 5; print("menu_categories", len(d))'; then
   record "lessonmenu_shape" 1
+  python3 - <<'PY'
+import json, os
+d = json.load(open(os.environ["BODY"]))
+name = ""
+for cat in d:
+    for child in cat.get("children") or []:
+        link = child.get("link") or ""
+        leaf = link.rsplit("/", 1)[-1]
+        if leaf.endswith(".lesson"):
+            name = leaf[: -len(".lesson")]
+            break
+    if name:
+        break
+open("/tmp/wg-e2e-lesson.txt", "w").write(name)
+print("lesson_id", name or "(none)")
+PY
 else
   record "lessonmenu_shape" 0
+  echo > /tmp/wg-e2e-lesson.txt
 fi
 
 code="$(http_code -c "$COOKIE" -b "$COOKIE" "$BASE_URL/start.mvc")"
@@ -157,12 +174,17 @@ else
   record "hints_shape" 0
 fi
 
-code="$(http_code -c "$COOKIE" -b "$COOKIE" "$BASE_URL/service/lessoninfo.mvc/WebGoatIntroduction")"
-assert_code "$code" "200" "GET /service/lessoninfo.mvc/WebGoatIntroduction"
-if json_ok 'import json,os; d=json.load(open(os.environ["BODY"])); assert "lessonTitle" in d or "title" in d or d; print(list(d)[:6] if isinstance(d,dict) else type(d))'; then
-  record "lessoninfo_shape" 1
+LESSON_ID="$(tr -d '[:space:]' < /tmp/wg-e2e-lesson.txt || true)"
+if [ -n "$LESSON_ID" ]; then
+  code="$(http_code -c "$COOKIE" -b "$COOKIE" "$BASE_URL/service/lessoninfo.mvc/${LESSON_ID}")"
+  assert_code "$code" "200" "GET /service/lessoninfo.mvc/{lesson}"
+  if json_ok 'import json,os; d=json.load(open(os.environ["BODY"])); assert isinstance(d, dict) and d.get("lessonTitle"); print(d.get("lessonTitle"))'; then
+    record "lessoninfo_shape" 1
+  else
+    record "lessoninfo_shape" 0
+  fi
 else
-  record "lessoninfo_shape" 0
+  record "lessoninfo_skipped" 0 "no .lesson link in menu"
 fi
 
 say "==> Logout + form login"
