@@ -38,45 +38,54 @@ public class SqlInjectionLessonIntegrationTest extends IntegrationTest {
     Map<String, Object> params = new HashMap<>();
     params.clear();
     params.put("query", sql_2);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack2"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack2"), params, true);
 
     params.clear();
     params.put("query", sql_3);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack3"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack3"), params, true);
 
     params.clear();
     params.put("query", sql_4_add);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack4"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack4"), params, true);
 
     params.clear();
     params.put("query", sql_5);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack5"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack5"), params, true);
 
+    // The assignments below bind their input as query parameters, so the injection payloads are
+    // handled as data and must no longer complete the assignment.
     params.clear();
     params.put("operator", sql_9_operator);
     params.put("account", sql_9_account);
     params.put("injection", sql_9_injection);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, false);
 
     params.clear();
     params.put("login_count", sql_10_login_count);
     params.put("userid", sql_10_userid);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, false);
 
     params.clear();
     params.put("name", sql_11_a);
     params.put("auth_tan", sql_11_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, false);
 
     params.clear();
     params.put("name", sql_12_a);
     params.put("auth_tan", sql_12_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, false);
 
     params.clear();
     params.put("action_string", sql_13);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, false);
 
-    checkResults("SqlInjection");
+    // A regular, numeric user id is still accepted by the assignment.
+    params.clear();
+    params.put("login_count", sql_10_login_count);
+    params.put("userid", "101");
+    checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, false);
+
+    // checkResults("SqlInjection") is intentionally not called: the injectable assignments of this
+    // lesson use bound parameters now and can therefore no longer be solved by an injection.
   }
 }

@@ -42,7 +42,9 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String login_count, String accountName) {
-    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= " + accountName;
+    // Both the login count and the user id are bound as parameters, so neither of them can change
+    // the meaning of the query.
+    String queryString = "SELECT * From user_data WHERE Login_Count = ? and userid= ?";
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =
           connection.prepareStatement(
@@ -58,13 +60,26 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
                     + login_count
                     + " to a number"
                     + "<br> Your query was: "
-                    + queryString.replace("?", login_count))
+                    + withValues(queryString, login_count, accountName))
+            .build();
+      }
+
+      int userId;
+      try {
+        userId = Integer.parseInt(accountName.trim());
+      } catch (Exception e) {
+        return failed(this)
+            .output(
+                "Could not parse: "
+                    + accountName
+                    + " to a number"
+                    + "<br> Your query was: "
+                    + withValues(queryString, login_count, accountName))
             .build();
       }
 
       query.setInt(1, count);
-      // String query = "SELECT * FROM user_data WHERE Login_Count = " + login_count + " and userid
-      // = " + accountName, ;
+      query.setInt(2, userId);
       try {
         ResultSet results = query.executeQuery();
 
@@ -79,7 +94,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
           if (results.getRow() >= 6) {
             return success(this)
                 .feedback("sql-injection.5b.success")
-                .output("Your query was: " + queryString.replace("?", login_count))
+                .output("Your query was: " + withValues(queryString, login_count, accountName))
                 .feedbackArgs(output.toString())
                 .build();
           } else {
@@ -87,21 +102,23 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
                 .output(
                     output.toString()
                         + "<br> Your query was: "
-                        + queryString.replace("?", login_count))
+                        + withValues(queryString, login_count, accountName))
                 .build();
           }
 
         } else {
           return failed(this)
               .feedback("sql-injection.5b.no.results")
-              .output("Your query was: " + queryString.replace("?", login_count))
+              .output("Your query was: " + withValues(queryString, login_count, accountName))
               .build();
         }
       } catch (SQLException sqle) {
 
         return failed(this)
             .output(
-                sqle.getMessage() + "<br> Your query was: " + queryString.replace("?", login_count))
+                sqle.getMessage()
+                    + "<br> Your query was: "
+                    + withValues(queryString, login_count, accountName))
             .build();
       }
     } catch (Exception e) {
@@ -111,8 +128,24 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
                   + " : "
                   + e.getMessage()
                   + "<br> Your query was: "
-                  + queryString.replace("?", login_count))
+                  + withValues(queryString, login_count, accountName))
           .build();
     }
+  }
+
+  /**
+   * Renders the parameterized query with the supplied values for display purposes only. The values
+   * are never used to build the query which is sent to the database.
+   */
+  private static String withValues(String queryString, String... values) {
+    String rendered = queryString;
+    for (String value : values) {
+      int placeholder = rendered.indexOf('?');
+      if (placeholder < 0) {
+        break;
+      }
+      rendered = rendered.substring(0, placeholder) + value + rendered.substring(placeholder + 1);
+    }
+    return rendered;
   }
 }

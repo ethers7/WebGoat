@@ -6,6 +6,8 @@ package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,21 +30,20 @@ public class SqlInjectionLesson8Test extends LessonTest {
         .andExpect(jsonPath("$.output", containsString("<table><tr><th>")));
   }
 
+  /**
+   * The TAN is bound as a query parameter, so the injected condition is compared as data and no
+   * longer returns the records of other employees.
+   */
   @Test
-  public void multipleAccounts() throws Exception {
+  public void injectedConditionDoesNotReturnMultipleAccounts() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack8")
                 .param("name", "Smith")
                 .param("auth_tan", "3SL99A' OR '1' = '1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.8.success"))))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                containsString(
-                    "<tr><td>96134<\\/td><td>Bob<\\/td><td>Franco<\\/td><td>Marketing<\\/td><td>83700<\\/td><td>LO9S2V<\\/td><\\/tr>")));
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(content().string(not(containsString("Franco"))));
   }
 
   @Test
@@ -71,8 +72,9 @@ public class SqlInjectionLesson8Test extends LessonTest {
         .andExpect(jsonPath("$.output").doesNotExist());
   }
 
+  /** Unbalanced quotes are data now, they can no longer break out of the query. */
   @Test
-  public void malformedQueryReturnsError() throws Exception {
+  public void quotesInTheTanAreTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack8")
@@ -80,6 +82,6 @@ public class SqlInjectionLesson8Test extends LessonTest {
                 .param("auth_tan", "3SL99A' OR '1' = '1'"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("lessonCompleted", is(false)))
-        .andExpect(jsonPath("$.output", containsString("feedback-negative")));
+        .andExpect(content().string(not(containsString("Franco"))));
   }
 }
