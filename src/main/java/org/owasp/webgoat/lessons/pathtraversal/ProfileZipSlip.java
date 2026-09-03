@@ -21,6 +21,7 @@ import java.util.zip.ZipFile;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.CurrentUsername;
+import org.owasp.webgoat.container.SafePaths;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,7 +65,9 @@ public class ProfileZipSlip extends ProfileUploadBase {
 
   @SneakyThrows
   private AttackResult processZipUpload(MultipartFile file, String username) {
-    var tmpZipDirectory = Files.createTempDirectory(username);
+    // The user name is only used as a prefix for the temporary directory, reduce it to a single
+    // path segment so it cannot place the directory somewhere else on the file system.
+    var tmpZipDirectory = Files.createTempDirectory(SafePaths.segment(username));
     cleanupAndCreateDirectoryForUser(username);
     var currentImage = getProfilePictureAsBase64(username);
 

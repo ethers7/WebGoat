@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.webgoat.container.SafePaths;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -53,14 +54,17 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
-    if (!targetDirectory.exists()) {
-      targetDirectory.mkdirs();
-    }
     try {
+      // The user name is reduced to a single path segment and the result is verified to stay
+      // inside the XXE directory, so a name containing '../' cannot write outside of it.
+      File targetDirectory =
+          SafePaths.resolveWithin(new File(webGoatHomeDirectory), "XXE", user.getUsername());
+      if (!targetDirectory.exists()) {
+        targetDirectory.mkdirs();
+      }
       Files.writeString(new File(targetDirectory, "secret.txt").toPath(), fileContents, UTF_8);
     } catch (IOException e) {
-      log.error("Unable to write 'secret.txt' to '{}", targetDirectory);
+      log.error("Unable to write 'secret.txt' to the XXE directory", e);
     }
   }
 
