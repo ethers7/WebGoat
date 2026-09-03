@@ -10,17 +10,22 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.LessonDataSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("SqlInjectionMitigations/servers")
 @Slf4j
 public class Servers {
+
+  private static final List<String> ALLOWED_SORT_COLUMNS =
+      List.of("id", "hostname", "ip", "mac", "status", "description");
 
   private final LessonDataSource dataSource;
 
@@ -45,12 +50,20 @@ public class Servers {
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
 
+    // Identifiers cannot be bound as parameters, so only a known column name is used in the query.
+    String sortColumn =
+        ALLOWED_SORT_COLUMNS.stream()
+            .filter(allowed -> allowed.equalsIgnoreCase(column))
+            .findFirst()
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid column name"));
+
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
                   + " of order' order by "
-                  + column)) {
+                  + sortColumn)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
