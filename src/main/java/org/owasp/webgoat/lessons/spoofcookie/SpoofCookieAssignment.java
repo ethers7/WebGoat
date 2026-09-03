@@ -70,6 +70,8 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   private AttackResult credentialsLoginFlow(
       String username, String password, HttpServletResponse response) {
     String lowerCasedUsername = username.toLowerCase();
+    // Non-production lesson fixtures: the credentials in the in-memory users map only
+    // unlock this cookie-spoofing exercise; nothing to rotate outside WebGoat.
     if (ATTACK_USERNAME.equals(lowerCasedUsername)
         && users.get(lowerCasedUsername).equals(password)) {
       return informationMessage(this).feedback("spoofcookie.cheating").build();

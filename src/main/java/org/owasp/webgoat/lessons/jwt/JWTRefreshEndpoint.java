@@ -58,6 +58,8 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
     String user = (String) json.get("user");
     String password = (String) json.get("password");
 
+    // Non-production lesson fixture: PASSWORD is the sample password for the lesson user
+    // Jerry; it grants no access outside this JWT exercise, nothing to rotate.
     if ("Jerry".equalsIgnoreCase(user) && PASSWORD.equals(password)) {
       return ok(createNewTokens(user));
     }

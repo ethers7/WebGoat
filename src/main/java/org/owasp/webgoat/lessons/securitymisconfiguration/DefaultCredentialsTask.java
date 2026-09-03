@@ -42,6 +42,8 @@ public class DefaultCredentialsTask implements AssignmentEndpoint {
           .build();
     }
 
+    // Non-production lesson fixtures: DEFAULT_USERNAME/DEFAULT_PASSWORD are the sample
+    // default credentials this lesson teaches students to find; nothing to rotate.
     if (DEFAULT_USERNAME.equals(username.trim()) && DEFAULT_PASSWORD.equals(password)) {
       return success(this)
           .feedback("securitymisconfiguration.task1.success")

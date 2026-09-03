@@ -60,6 +60,8 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
+    // Non-production challenge fixture: ADMIN_PASSWORD_LINK is the reset-link token students
+    // must recover from the lesson's git archive; it grants no access, nothing to rotate.
     if (link.equals(ADMIN_PASSWORD_LINK)) {
       return ResponseEntity.accepted()
           .body(

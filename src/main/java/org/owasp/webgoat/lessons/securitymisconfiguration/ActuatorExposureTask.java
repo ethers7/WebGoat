@@ -54,6 +54,8 @@ public class ActuatorExposureTask implements AssignmentEndpoint {
       value = "/SecurityMisconfiguration/task3",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public AttackResult submitApiKey(@RequestParam("apiKey") String apiKey) {
+    // Non-production lesson fixture: LEAKED_API_KEY is the fake key this lesson exposes on
+    // purpose so students can find it; it grants no access, nothing to rotate.
     if (LEAKED_API_KEY.equals(apiKey)) {
       return success(this)
           .feedback("securitymisconfiguration.task3.success")
