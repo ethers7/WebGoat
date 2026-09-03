@@ -4,15 +4,18 @@
  */
 package org.owasp.webgoat.lessons.pathtraversal;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.nio.file.Files;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.WithWebGoatUser;
 import org.owasp.webgoat.container.plugins.LessonTest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -20,9 +23,32 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @WithWebGoatUser
 class ProfileUploadTest extends LessonTest {
 
+  @Value("${webgoat.server.directory}")
+  private String webGoatServerDirectory;
+
   @BeforeEach
   void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+  }
+
+  @Test
+  void traversalAttemptIsNotWrittenOutsideTheDirectoryOfTheUser() throws Exception {
+    var fileOutsideDirectoryOfUser = new File(webGoatServerDirectory, "PathTraversal/John Doe");
+    Files.deleteIfExists(fileOutsideDirectoryOfUser.toPath());
+
+    var profilePicture =
+        new MockMultipartFile(
+            "uploadedFile", "../picture.jpg", "text/plain", "an image".getBytes());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
+                .file(profilePicture)
+                .param("fullName", "../John Doe"))
+        .andExpect(status().is(200))
+        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
+
+    assertThat(fileOutsideDirectoryOfUser).doesNotExist();
   }
 
   @Test

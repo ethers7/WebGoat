@@ -96,9 +96,10 @@ public class CSRFIntegrationTest extends IntegrationTest {
   private void uploadTrickHtml(String htmlName, String htmlContent) throws IOException {
 
     // remove any left over html
-    Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path webWolfFilePath = Paths.get(webwolfFileDir).toAbsolutePath().normalize();
+    Path trickHtmlFile = resolveWithin(webWolfFilePath, this.getUser(), htmlName);
+    if (Files.exists(trickHtmlFile)) {
+      Files.delete(trickHtmlFile);
     }
 
     // upload trick html
@@ -113,6 +114,22 @@ public class CSRFIntegrationTest extends IntegrationTest {
         .response()
         .getBody()
         .asString();
+  }
+
+  /**
+   * Resolves the segments against the base directory and rejects results outside of that directory,
+   * for example through {@code ..} segments or an absolute path.
+   */
+  private static Path resolveWithin(Path baseDirectory, String... segments) throws IOException {
+    Path resolved = baseDirectory;
+    for (String segment : segments) {
+      resolved = resolved.resolve(segment);
+    }
+    resolved = resolved.toAbsolutePath().normalize();
+    if (!resolved.startsWith(baseDirectory)) {
+      throw new IOException("Resolved path is outside of " + baseDirectory);
+    }
+    return resolved;
   }
 
   private String callTrickHtml(String htmlName) {
