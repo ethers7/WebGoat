@@ -7,10 +7,8 @@ package org.owasp.webgoat.lessons.deserialization;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
 import java.util.Base64;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -39,8 +37,11 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    // The token is attacker controlled, so it is deserialized through a stream which only resolves
+    // the classes this lesson needs and which bounds the size of the payload. A gadget chain is
+    // refused before the class is loaded, while the expected VulnerableTaskHolder still works.
+    try (AllowListObjectInputStream ois =
+        AllowListObjectInputStream.from(Base64.getDecoder().decode(b64token))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
@@ -50,6 +51,8 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
         return failed(this).feedback("insecure-deserialization.wrongobject").build();
       }
       after = System.currentTimeMillis();
+    } catch (UnsafeDeserializationException e) {
+      return failed(this).feedback("insecure-deserialization.wrongobject").build();
     } catch (InvalidClassException e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (IllegalArgumentException e) {

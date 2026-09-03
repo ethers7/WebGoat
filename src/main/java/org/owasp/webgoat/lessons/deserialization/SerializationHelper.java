@@ -4,11 +4,9 @@
  */
 package org.owasp.webgoat.lessons.deserialization;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
@@ -19,10 +17,11 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    // Deserialize through the allow list stream: the payload is attacker controlled, so anything
+    // which is not one of the classes this lesson needs is refused before it is loaded.
+    try (AllowListObjectInputStream ois = AllowListObjectInputStream.from(data)) {
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
