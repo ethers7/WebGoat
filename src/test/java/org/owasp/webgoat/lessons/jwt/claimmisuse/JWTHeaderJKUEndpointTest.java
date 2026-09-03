@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.jwt.claimmisuse;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static io.jsonwebtoken.SignatureAlgorithm.RS256;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -75,12 +76,29 @@ class JWTHeaderJKUEndpointTest extends LessonTest {
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
+  @Test
+  @DisplayName("When the jku header points to a host which is not approved the call should fail")
+  void shouldFailWhenJkuPointsToAnotherHost() throws Exception {
+    setupJsonWebKeySetInWebWolf();
+    var token = createTokenAndSignIt("http://webgoat.example.com:%d/files/jwks".formatted(port));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/jku/delete").param("token", token).content(""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.output", containsString("does not point to an approved host")));
+  }
+
   private String createTokenAndSignIt() {
+    return createTokenAndSignIt("http://localhost:%d/files/jwks".formatted(port));
+  }
+
+  private String createTokenAndSignIt(String jku) {
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
     var token =
         Jwts.builder()
-            .setHeaderParam("jku", "http://localhost:%d/files/jwks".formatted(port))
+            .setHeaderParam("jku", jku)
             .setClaims(claims)
             .signWith(RS256, this.keyPair.getPrivate())
             .compact();
