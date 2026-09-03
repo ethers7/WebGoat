@@ -42,22 +42,20 @@ class ProfileUploadRetrievalTest extends LessonTest {
         .andExpect(header().string("Location", containsString("?id=")))
         .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
 
-    // Browse the directories
+    // Browsing outside of the cat pictures directory is rejected, the requested name is
+    // canonicalized and has to stay within that directory
     var uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2F");
     mockMvc
         .perform(get(uri))
-        .andExpect(status().is(404))
-        // .andDo(MockMvcResultHandlers.print())
-        .andExpect(content().string(containsString("path-traversal-secret.jpg")));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("Illegal characters are not allowed")));
 
-    // Retrieve the secret file (note: .jpg is added by the server)
+    // Retrieving the secret file through an encoded traversal is rejected as well
     uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret");
     mockMvc
         .perform(get(uri))
-        .andExpect(status().is(200))
-        .andExpect(
-            content().string("You found it submit the SHA-512 hash of your username as answer"))
-        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("Illegal characters are not allowed")));
 
     // Post flag
     mockMvc
@@ -73,6 +71,15 @@ class ProfileUploadRetrievalTest extends LessonTest {
         .perform(get("/PathTraversal/random-picture"))
         .andExpect(status().is(200))
         .andExpect(header().exists("Location"))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
+  }
+
+  @Test
+  void shouldReceiveRequestedPicture() throws Exception {
+    mockMvc
+        .perform(get("/PathTraversal/random-picture?id=1"))
+        .andExpect(status().is(200))
+        .andExpect(header().string("Location", containsString("?id=1.jpg")))
         .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
   }
 

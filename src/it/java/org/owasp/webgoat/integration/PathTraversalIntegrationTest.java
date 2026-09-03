@@ -102,19 +102,20 @@ class PathTraversalIT extends IntegrationTest {
   }
 
   private void assignment4() throws IOException {
+    // The requested picture is canonicalized and has to stay within the cat pictures directory,
+    // an encoded traversal is rejected instead of serving the secret
     var uri = "PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret";
-      RestAssured.given()
+    RestAssured.given()
         .urlEncodingEnabled(false)
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .get(webGoatUrlConfig.url(uri))
         .then()
-        .statusCode(200)
-        .body(CoreMatchers.is("You found it submit the SHA-512 hash of your username as answer"));
+        .statusCode(400);
 
-      checkAssignment(
-              webGoatUrlConfig.url("PathTraversal/random"),
+    checkAssignment(
+        webGoatUrlConfig.url("PathTraversal/random"),
         Map.of("secret", Sha512DigestUtils.shaHex(this.getUser())),
         true);
   }

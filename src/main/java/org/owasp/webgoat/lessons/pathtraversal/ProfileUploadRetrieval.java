@@ -108,11 +108,17 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       return ResponseEntity.badRequest()
           .body("Illegal characters are not allowed in the query params");
     }
+    var id = request.getParameter("id");
+    var pictureName = (id == null ? String.valueOf(RandomUtils.nextInt(1, 11)) : id) + ".jpg";
+    File catPicture;
     try {
-      var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
-
+      catPicture = resolveCatPicture(pictureName);
+    } catch (IOException e) {
+      log.warn("Rejected picture name resolving outside the cat pictures directory");
+      return ResponseEntity.badRequest()
+          .body("Illegal characters are not allowed in the query params");
+    }
+    try {
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(MediaType.IMAGE_JPEG_VALUE))
