@@ -36,4 +36,34 @@ public class SSRFTest2 extends LessonTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
+
+  @Test
+  public void cloudMetadataUrlIsRejected() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SSRF/task2")
+                .param("url", "http://169.254.169.254/latest/meta-data/"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  public void internalUrlIsRejected() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SSRF/task2")
+                .param("url", "http://localhost:8080/WebGoat/actuator"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  public void lookAlikeHostIsRejected() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SSRF/task2")
+                .param("url", "http://ifconfig.pro.attacker.example.com/"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
 }
