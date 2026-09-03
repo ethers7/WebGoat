@@ -85,6 +85,20 @@ class FileServerTest {
   }
 
   @Test
+  @DisplayName("An upload with a path in its file name is rejected")
+  void shouldRejectUploadEscapingTheUserDirectory() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalUpload()).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=Invalid+file+name"));
+
+    Assertions.assertThat(uploadedFiles()).isEmpty();
+    Assertions.assertThat(fileServerLocation.getParent().resolve("escaped.txt")).doesNotExist();
+  }
+
+  @Test
   @DisplayName("An uploaded file is listed on the files page")
   void shouldListUploadedFile() throws Exception {
     mockMvc.perform(multipart("/fileupload").file(testFile()).principal(AUTHENTICATION));
@@ -141,6 +155,11 @@ class FileServerTest {
 
   private MockMultipartFile emptyUpload() {
     return new MockMultipartFile("file", "", "application/octet-stream", new byte[0]);
+  }
+
+  private MockMultipartFile traversalUpload() {
+    return new MockMultipartFile(
+        "file", "../../escaped.txt", "text/plain", "escaped".getBytes(StandardCharsets.UTF_8));
   }
 
   private MockMultipartFile testFile() {

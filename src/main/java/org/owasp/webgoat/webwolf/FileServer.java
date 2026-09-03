@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -47,6 +49,7 @@ public class FileServer {
 
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
+  static final String INVALID_FILE_NAME = "Invalid file name";
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -85,18 +88,45 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+    Path destinationFile;
+    try {
+      destinationFile = resolveUploadedFile(destinationDir, multipartFile.getOriginalFilename());
+    } catch (IOException e) {
+      log.warn("Rejected upload of {}: {}", username, e.getMessage());
+      return new ModelAndView(
+          new RedirectView("files", true),
+          new ModelMap().addAttribute("uploadSuccess", INVALID_FILE_NAME));
+    }
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", destinationFile);
 
     return new ModelAndView(
         new RedirectView("files", true),
         new ModelMap().addAttribute("uploadSuccess", UPLOAD_SUCCESSFUL));
+  }
+
+  /**
+   * Resolves the name of the uploaded file against the directory of the user. Only the file name
+   * part of the upload is used and the canonical location has to stay inside the directory of the
+   * user, so names containing a path, {@code ..} segments or an absolute path are rejected.
+   */
+  private static Path resolveUploadedFile(File destinationDir, String originalFilename)
+      throws IOException {
+    var baseDirectory = destinationDir.getCanonicalFile();
+    var fileName = FilenameUtils.getName(originalFilename);
+    if (!StringUtils.hasText(fileName) || !fileName.equals(originalFilename)) {
+      throw new IOException("Only plain file names without a path are allowed");
+    }
+    var uploadedFile = new File(baseDirectory, fileName).getCanonicalFile();
+    if (!uploadedFile.toPath().startsWith(baseDirectory.toPath())) {
+      throw new IOException("File name resolves outside of the directory of the user");
+    }
+    return uploadedFile.toPath();
   }
 
   @GetMapping(value = "/files")
