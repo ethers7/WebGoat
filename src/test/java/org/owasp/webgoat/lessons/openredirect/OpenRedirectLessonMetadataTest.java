@@ -37,9 +37,51 @@ class OpenRedirectLessonMetadataTest {
   }
 
   @Test
-  void realRedirectReturnsRedirectPrefixForSuppliedUrl() {
+  void realRedirectPreservesAllowListedAbsoluteUrl() {
+    ModelAndView response = realRedirect.real("https://example.com");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:https://example.com");
+  }
+
+  @Test
+  void realRedirectPreservesSameOriginRelativePath() {
+    ModelAndView response = realRedirect.real("/welcome.mvc");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
+  }
+
+  @Test
+  void realRedirectFallsBackForHostOutsideAllowList() {
     ModelAndView response = realRedirect.real("https://attacker.example");
 
-    assertThat(response.getViewName()).isEqualTo("redirect:https://attacker.example");
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
+  }
+
+  @Test
+  void realRedirectFallsBackForSchemeRelativeUrl() {
+    ModelAndView response = realRedirect.real("//attacker.example");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
+  }
+
+  @Test
+  void realRedirectFallsBackWhenAllowListedHostIsOnlyUserInfo() {
+    ModelAndView response = realRedirect.real("https://example.com@attacker.example");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
+  }
+
+  @Test
+  void realRedirectFallsBackWhenAllowListedHostIsOnlyAPrefix() {
+    ModelAndView response = realRedirect.real("https://example.com.attacker.example");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
+  }
+
+  @Test
+  void realRedirectFallsBackForNonHttpScheme() {
+    ModelAndView response = realRedirect.real("javascript:alert(1)");
+
+    assertThat(response.getViewName()).isEqualTo("redirect:/welcome.mvc");
   }
 }
