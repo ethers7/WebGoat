@@ -75,8 +75,7 @@ public class SqlInjectionAdvancedUITest extends PlaywrightTest {
   }
 
   @Test
-  @DisplayName(
-      "Using SQL Injection to register as Tom to guess the password and the guess is correct")
+  @DisplayName("A correct password guess through SQL Injection no longer leaks the password")
   void startGuessingCorrect() {
     lessonPage.navigateTo(5);
     var page = lessonPage.getPage();
@@ -87,8 +86,11 @@ public class SqlInjectionAdvancedUITest extends PlaywrightTest {
     page.locator("[name='confirm_password_reg']").fill("test");
     page.getByRole(AriaRole.BUTTON, new GetByRoleOptions().setName("Register Now")).click();
 
+    // The user id is bound as a parameter, so the payload is stored as a literal user name and no
+    // longer tells whether the guessed character is part of Tom's password.
     assertThat(lessonPage.getAssignmentOutput())
-        .containsText("User tom' AND substring(password,1,1)='t already exists");
+        .containsText(
+            "User tom' AND substring(password,1,1)='t created, please proceed to the login page.");
   }
 
   @Test

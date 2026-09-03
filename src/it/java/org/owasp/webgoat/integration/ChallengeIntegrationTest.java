@@ -65,6 +65,12 @@ public class ChallengeIntegrationTest extends IntegrationTest {
     params.put("username_login", "Larry");
     params.put("password_login", "1' or '1'='1");
 
+    // The login uses bound parameters, the classic SQL injection no longer logs Larry in.
+    checkAssignment(webGoatUrlConfig.url("challenge/5"), params, false);
+
+    // Only the real password gives access and therefore the flag.
+    params.put("password_login", "larryknows");
+
     String result =
         RestAssured.given()
             .when()

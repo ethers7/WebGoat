@@ -54,30 +54,39 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
         "Smith';SESELECTLECT/**/*/**/FRFROMOM/**/user_system_data;--");
       checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, true);
 
-      RestAssured.given()
+    // The sort column is validated against an allowlist of selectable columns, so an injected
+    // expression is rejected instead of being executed.
+    RestAssured.given()
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .contentType(ContentType.JSON)
         .get(
-                webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=(case when (true) then hostname"
-                        + " else id end)"))
+            webGoatUrlConfig.url(
+                "SqlInjectionMitigations/servers?column=(case when (true) then hostname"
+                    + " else id end)"))
         .then()
-        .statusCode(200);
+        .statusCode(400);
 
-      RestAssured.given()
+    RestAssured.given()
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .contentType(ContentType.JSON)
         .get(webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=unknown"))
         .then()
-        .statusCode(500)
-        .body(
-            "trace",
-            containsString(
-                "select id, hostname, ip, mac, status, description from SERVERS where status <>"
-                    + " 'out of order' order by"));
+        .statusCode(400);
+
+    // Sorting on one of the allowed columns still works.
+    RestAssured.given()
+        .when()
+        .relaxedHTTPSValidation()
+        .cookie("JSESSIONID", getWebGoatCookie())
+        .contentType(ContentType.JSON)
+        .get(webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=hostname"))
+        .then()
+        .statusCode(200)
+        .body("[0].hostname", containsString("webgoat-acc"));
 
     params.clear();
     params.put("ip", "104.130.219.202");
