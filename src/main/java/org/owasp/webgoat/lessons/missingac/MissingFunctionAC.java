@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MissingFunctionAC extends Lesson {
 
+  // Non-production lesson fixtures: these salts are deliberately weak so students can reproduce
+  // the hashes in the missing-access-control lesson, they protect nothing, nothing to rotate.
   public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
   public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
 

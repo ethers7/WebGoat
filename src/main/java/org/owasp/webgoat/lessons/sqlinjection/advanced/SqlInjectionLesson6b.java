@@ -39,6 +39,8 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   }
 
   protected String getPassword() {
+    // Non-production lesson fixture: fallback value for the lesson's in-memory database lookup
+    // below, it is not a real credential, nothing to rotate.
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
       // The user name is bound as a parameter so it cannot change the meaning of the query.

@@ -43,6 +43,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+  // Non-production lesson fixture: JWT_PASSWORD only signs the throw-away tokens of this JWT
+  // exercise, it is not a production signing key, nothing to rotate.
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 
