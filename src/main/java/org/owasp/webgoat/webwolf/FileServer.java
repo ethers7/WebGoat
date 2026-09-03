@@ -16,6 +16,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -48,6 +49,10 @@ public class FileServer {
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
   static final String UPLOAD_NAME_NOT_ALLOWED = "File name is not allowed";
+
+  /** The complete set of messages the files page is allowed to show, see getFiles. */
+  private static final Set<String> UPLOAD_MESSAGES =
+      Set.of(UPLOAD_SUCCESSFUL, NOTHING_TO_UPLOAD, UPLOAD_TOO_LARGE, UPLOAD_NAME_NOT_ALLOWED);
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -123,9 +128,11 @@ public class FileServer {
     ModelAndView modelAndView = new ModelAndView();
     modelAndView.setViewName("files");
     // the message of the upload we are redirected from, see importFile and
-    // FileUploadExceptionAdvice
+    // FileUploadExceptionAdvice. The parameter is supplied by the caller, so only the messages
+    // this application itself redirects with are shown, anything else is ignored instead of
+    // reflecting attacker chosen text into the alert on the page.
     var uploadMessage = request.getParameter("uploadSuccess");
-    if (StringUtils.hasText(uploadMessage)) {
+    if (uploadMessage != null && UPLOAD_MESSAGES.contains(uploadMessage)) {
       modelAndView.addObject("uploadSuccess", uploadMessage);
       modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
     }
