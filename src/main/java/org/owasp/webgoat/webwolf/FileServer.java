@@ -17,11 +17,13 @@ import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -49,6 +52,10 @@ public class FileServer {
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
   static final String INVALID_FILE_NAME = "Invalid file name";
+
+  /** Only the messages of an upload we can be redirected from are shown on the files page. */
+  private static final Set<String> UPLOAD_MESSAGES =
+      Set.of(UPLOAD_SUCCESSFUL, NOTHING_TO_UPLOAD, UPLOAD_TOO_LARGE, INVALID_FILE_NAME);
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -140,6 +147,10 @@ public class FileServer {
     // FileUploadExceptionAdvice
     var uploadMessage = request.getParameter("uploadSuccess");
     if (StringUtils.hasText(uploadMessage)) {
+      if (!UPLOAD_MESSAGES.contains(uploadMessage)) {
+        log.debug("Rejected unknown upload message for {}", username);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown upload message");
+      }
       modelAndView.addObject("uploadSuccess", uploadMessage);
       modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
     }

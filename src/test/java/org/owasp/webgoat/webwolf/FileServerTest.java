@@ -62,8 +62,10 @@ class FileServerTest {
     mockMvc
         .perform(get("/file-server-location"))
         .andExpect(status().isOk())
-        .andExpect(result -> Assertions.assertThat(result.getResponse().getContentAsString())
-            .isEqualTo(fileServerLocation.toString()));
+        .andExpect(
+            result ->
+                Assertions.assertThat(result.getResponse().getContentAsString())
+                    .isEqualTo(fileServerLocation.toString()));
   }
 
   @Test
@@ -141,6 +143,17 @@ class FileServerTest {
     mockMvc
         .perform(get("/files").principal(AUTHENTICATION))
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+  }
+
+  @Test
+  @DisplayName("A message which is not one of the upload messages is rejected")
+  void shouldRejectUnknownUploadMessage() throws Exception {
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "<script>alert(1)</script>")
+                .principal(AUTHENTICATION))
+        .andExpect(status().isBadRequest());
   }
 
   private Path userDirectory() {
