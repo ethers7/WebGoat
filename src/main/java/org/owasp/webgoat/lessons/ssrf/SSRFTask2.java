@@ -9,9 +9,9 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -24,6 +24,18 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"ssrf.hint3"})
 public class SSRFTask2 implements AssignmentEndpoint {
 
+  /** The only destination WebGoat is allowed to fetch for this lesson. */
+  private static final URI IFCONFIG_PRO = URI.create("http://ifconfig.pro");
+
+  /**
+   * Server-side map of the destinations the user is allowed to select.
+   *
+   * <p>The user supplied value is only compared against this allowlist, it is never used to build
+   * the request itself, so it cannot make WebGoat call out to link-local, metadata or other
+   * internal addresses (server-side request forgery).
+   */
+  private static final Set<String> ALLOWED_URLS = Set.of(IFCONFIG_PRO.toString());
+
   @PostMapping("/SSRF/task2")
   @ResponseBody
   public AttackResult completed(@RequestParam String url) {
@@ -31,14 +43,12 @@ public class SSRFTask2 implements AssignmentEndpoint {
   }
 
   protected AttackResult furBall(String url) {
-    if (url.matches("http://ifconfig\\.pro")) {
+    if (ALLOWED_URLS.contains(url)) {
       String html;
-      try (InputStream in = new URL(url).openStream()) {
+      try (InputStream in = IFCONFIG_PRO.toURL().openStream()) {
         html =
             new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
-      } catch (MalformedURLException e) {
-        return getFailedResult(e.getMessage());
       } catch (IOException e) {
         // in case the external site is down, the test and lesson should still be ok
         html =

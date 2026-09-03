@@ -36,4 +36,14 @@ public class SSRFTest2 extends LessonTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
+
+  @Test
+  public void urlOutsideAllowlistIsNotFetched() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SSRF/task2")
+                .param("url", "http://169.254.169.254/latest/meta-data/"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
 }
