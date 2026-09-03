@@ -102,6 +102,8 @@ class PathTraversalIT extends IntegrationTest {
   }
 
   private void assignment4() throws IOException {
+    // The identifier is reduced to a bare file name inside the cat pictures directory, so the
+    // secret stored outside that directory can no longer be retrieved by traversing upwards.
     var uri = "PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret";
       RestAssured.given()
         .urlEncodingEnabled(false)
@@ -110,8 +112,11 @@ class PathTraversalIT extends IntegrationTest {
         .cookie("JSESSIONID", getWebGoatCookie())
         .get(webGoatUrlConfig.url(uri))
         .then()
-        .statusCode(200)
-        .body(CoreMatchers.is("You found it submit the SHA-512 hash of your username as answer"));
+        .statusCode(400)
+        .body(
+            CoreMatchers.not(
+                CoreMatchers.containsString(
+                    "You found it submit the SHA-512 hash of your username as answer")));
 
       checkAssignment(
               webGoatUrlConfig.url("PathTraversal/random"),

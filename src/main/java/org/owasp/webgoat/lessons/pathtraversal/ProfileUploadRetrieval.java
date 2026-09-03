@@ -18,6 +18,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.owasp.webgoat.container.CurrentUsername;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -97,8 +98,17 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      // Only a bare file name is accepted, any directory information supplied by the caller is
+      // stripped so the request cannot walk out of the cat pictures directory.
+      var pictureName =
+          id == null ? String.valueOf(RandomUtils.nextInt(1, 11)) : FilenameUtils.getName(id);
+      var baseDirectory = catPicturesDirectory.getCanonicalFile();
+      var catPicture = new File(baseDirectory, pictureName + ".jpg").getCanonicalFile();
+      // Defense in depth: verify the resolved path really stays inside the base directory, this
+      // also rejects escapes through symbolic links.
+      if (!catPicture.toPath().startsWith(baseDirectory.toPath())) {
+        return ResponseEntity.badRequest().body("Invalid picture requested");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()

@@ -6,6 +6,7 @@ package org.owasp.webgoat.lessons.pathtraversal;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -42,22 +43,27 @@ class ProfileUploadRetrievalTest extends LessonTest {
         .andExpect(header().string("Location", containsString("?id=")))
         .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
 
-    // Browse the directories
+    // Browsing outside the cat pictures directory is no longer possible, the identifier is
+    // reduced to a bare file name so only the cat pictures are listed
     var uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2F");
     mockMvc
         .perform(get(uri))
         .andExpect(status().is(404))
         // .andDo(MockMvcResultHandlers.print())
-        .andExpect(content().string(containsString("path-traversal-secret.jpg")));
+        .andExpect(content().string(containsString("cats" + File.separator + "8.jpg")))
+        .andExpect(content().string(not(containsString("path-traversal-secret.jpg"))));
 
-    // Retrieve the secret file (note: .jpg is added by the server)
+    // The secret outside the cat pictures directory can no longer be retrieved
     uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret");
     mockMvc
         .perform(get(uri))
-        .andExpect(status().is(200))
+        .andExpect(status().is(400))
         .andExpect(
-            content().string("You found it submit the SHA-512 hash of your username as answer"))
-        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
+            content()
+                .string(
+                    not(
+                        containsString(
+                            "You found it submit the SHA-512 hash of your username as answer"))));
 
     // Post flag
     mockMvc
@@ -80,6 +86,15 @@ class ProfileUploadRetrievalTest extends LessonTest {
   void unknownFileShouldGiveDirectoryContents() throws Exception {
     mockMvc
         .perform(get("/PathTraversal/random-picture?id=test"))
+        .andExpect(status().is(404))
+        .andExpect(content().string(containsString("cats" + File.separator + "8.jpg")));
+  }
+
+  @Test
+  void absolutePathShouldStayInsideCatPicturesDirectory() throws Exception {
+    var uri = new URI("/PathTraversal/random-picture?id=%2Fetc%2Fpasswd");
+    mockMvc
+        .perform(get(uri))
         .andExpect(status().is(404))
         .andExpect(content().string(containsString("cats" + File.separator + "8.jpg")));
   }
