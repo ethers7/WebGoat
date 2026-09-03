@@ -9,9 +9,9 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -41,12 +41,14 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   protected String getPassword() {
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
-      String query = "SELECT password FROM user_system_data WHERE user_name = 'dave'";
+      // The user name is bound as a parameter so it cannot change the meaning of the query.
+      String query = "SELECT password FROM user_system_data WHERE user_name = ?";
       try {
-        Statement statement =
-            connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        ResultSet results = statement.executeQuery(query);
+        PreparedStatement statement =
+            connection.prepareStatement(
+                query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        statement.setString(1, "dave");
+        ResultSet results = statement.executeQuery();
 
         if (results != null && results.first()) {
           password = results.getString("password");

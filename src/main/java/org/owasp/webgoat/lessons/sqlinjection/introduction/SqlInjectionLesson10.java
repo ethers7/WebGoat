@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -97,10 +96,12 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
   }
 
   private boolean tableExists(Connection connection) {
-    try {
-      Statement stmt =
-          connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-      ResultSet results = stmt.executeQuery("SELECT * FROM access_log");
+    try (PreparedStatement stmt =
+        connection.prepareStatement(
+            "SELECT * FROM access_log",
+            ResultSet.TYPE_SCROLL_INSENSITIVE,
+            ResultSet.CONCUR_READ_ONLY)) {
+      ResultSet results = stmt.executeQuery();
       int cols = results.getMetaData().getColumnCount();
       return (cols > 0);
     } catch (SQLException e) {

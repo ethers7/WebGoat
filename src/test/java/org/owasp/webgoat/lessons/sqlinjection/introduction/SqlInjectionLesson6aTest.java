@@ -6,6 +6,8 @@ package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,47 +27,50 @@ public class SqlInjectionLesson6aTest extends LessonTest {
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
+  /** An existing last name still returns the employees, but does not solve the assignment. */
   @Test
-  public void wrongNumberOfColumns() throws Exception {
+  public void existingAccountNameDoesNotSolveTheAssignment() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
+                .param("userid_6a", "Smith"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(content().string(not(containsString("passW0rD"))));
+  }
+
+  /**
+   * The account name is bound as a query parameter, so the appended UNION is searched for as a last
+   * name and the passwords of the other table are never returned.
+   */
+  @Test
+  public void unionSelectIsTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
                 .param(
                     "userid_6a",
-                    "Smith' union select userid,user_name, password,cookie from user_system_data"
-                        + " --"))
+                    "Smith' union select userid,user_name, password,cookie,cookie, cookie,userid"
+                        + " from user_system_data --"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                containsString(
-                    "column number mismatch detected in rows of UNION, INTERSECT, EXCEPT, or VALUES"
-                        + " operation")));
+        .andExpect(jsonPath("$.output", containsString("last_name = ?")))
+        .andExpect(content().string(not(containsString("passW0rD"))));
   }
 
+  /**
+   * The account name is bound as a query parameter, so the appended statement is searched for as a
+   * last name and is never executed.
+   */
   @Test
-  public void wrongDataTypeOfColumns() throws Exception {
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
-                .param(
-                    "userid_6a",
-                    "Smith' union select 1,password, 1,'2','3', '4',1 from user_system_data --"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(jsonPath("$.output", containsString("incompatible data types in combination")));
-  }
-
-  @Test
-  public void correctSolution() throws Exception {
+  public void appendedSelectStatementIsTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
                 .param("userid_6a", "Smith'; SELECT * from user_system_data; --"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("passW0rD")));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(content().string(not(containsString("passW0rD"))));
   }
 
   @Test
@@ -76,17 +81,8 @@ public class SqlInjectionLesson6aTest extends LessonTest {
                 .param("userid_6a", "Smith' and 1 = 2 --"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))));
-  }
-
-  @Test
-  public void noUnionUsed() throws Exception {
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
-                .param("userid_6a", "S'; Select * from user_system_data; --"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("UNION")));
+        .andExpect(
+            jsonPath(
+                "$.feedback", is(messages.getMessage("sql-injection.advanced.6a.no.results"))));
   }
 }

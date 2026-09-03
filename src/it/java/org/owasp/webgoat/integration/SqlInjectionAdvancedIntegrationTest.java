@@ -26,16 +26,18 @@ public class SqlInjectionAdvancedIntegrationTest extends IntegrationTest {
     params.put("password_login", "thisisasecretfortomonly");
       checkAssignment(webGoatUrlConfig.url("SqlInjectionAdvanced/login"), params, true);
 
+    // The account name of assignment 6a is bound as a query parameter, so the injection payloads
+    // are handled as data and must no longer complete the assignment.
     params.clear();
     params.put("userid_6a", "'; SELECT * FROM user_system_data;--");
-      checkAssignment(webGoatUrlConfig.url("SqlInjectionAdvanced/attack6a"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjectionAdvanced/attack6a"), params, false);
 
     params.clear();
     params.put(
         "userid_6a",
         "Smith' union select userid,user_name, user_name,user_name,password,cookie,userid from"
             + " user_system_data --");
-      checkAssignment(webGoatUrlConfig.url("SqlInjectionAdvanced/attack6a"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjectionAdvanced/attack6a"), params, false);
 
     params.clear();
     params.put("userid_6b", "passW0rD");

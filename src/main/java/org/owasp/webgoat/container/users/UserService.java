@@ -7,6 +7,7 @@ package org.owasp.webgoat.container.users;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.owasp.webgoat.container.lessons.Initializable;
@@ -20,6 +21,12 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class UserService implements UserDetailsService {
+
+  /**
+   * A schema name is an identifier and can therefore not be bound as a parameter, so only names
+   * consisting of these characters are accepted when the lesson schema is created.
+   */
+  private static final Pattern VALID_SCHEMA_NAME = Pattern.compile("[a-zA-Z0-9_.@-]{1,64}");
 
   private final UserRepository userRepository;
   private final UserProgressRepository userTrackerRepository;
@@ -75,8 +82,16 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
+    String schema = validatedSchemaName(webGoatUser.getUsername());
+    jdbcTemplate.execute("CREATE SCHEMA \"" + schema + "\" authorization dba");
     flywayLessons.apply(webGoatUser.getUsername()).migrate();
+  }
+
+  private static String validatedSchemaName(String username) {
+    if (username == null || !VALID_SCHEMA_NAME.matcher(username).matches()) {
+      throw new IllegalArgumentException("Username cannot be used as a schema name");
+    }
+    return username;
   }
 
   public List<WebGoatUser> getAllUsers() {

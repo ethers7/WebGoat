@@ -43,16 +43,19 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
             + "}");
       checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10b"), params, true);
 
+    // Both assignments below delegate to assignment 6a, which binds the account name as a query
+    // parameter, so the injection payloads are handled as data and can no longer solve them.
     params.clear();
     params.put(
         "userid_sql_only_input_validation", "Smith';SELECT/**/*/**/from/**/user_system_data;--");
-      checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, false);
 
     params.clear();
     params.put(
         "userid_sql_only_input_validation_on_keywords",
         "Smith';SESELECTLECT/**/*/**/FRFROMOM/**/user_system_data;--");
-      checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, true);
+      checkAssignment(
+              webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, false);
 
       RestAssured.given()
         .when()
@@ -88,6 +91,8 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
     params.put("ip", "104.130.219.202");
       checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack12a"), params, true);
 
-    checkResults("SqlInjectionMitigations");
+    // checkResults("SqlInjectionMitigations") is intentionally not called: the two input validation
+    // assignments of this lesson use bound parameters now and can therefore no longer be solved by
+    // an injection.
   }
 }
