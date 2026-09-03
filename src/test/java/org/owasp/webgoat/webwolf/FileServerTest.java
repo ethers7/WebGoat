@@ -85,6 +85,37 @@ class FileServerTest {
   }
 
   @Test
+  @DisplayName("A file name which points outside the directory of the user cannot escape it")
+  void shouldStoreTraversingFileNameInsideTheDirectoryOfTheUser() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversingFile()).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection());
+
+    // the name is reduced to a plain file name, nothing is written next to or above the location
+    Assertions.assertThat(uploadedFiles()).hasSize(1);
+    Assertions.assertThat(userDirectory().resolve("passwords.txt"))
+        .content()
+        .isEqualTo("traversed");
+    Assertions.assertThat(fileServerLocation.resolve("passwords.txt")).doesNotExist();
+    Assertions.assertThat(fileServerLocation.getParent().resolve("passwords.txt")).doesNotExist();
+  }
+
+  @Test
+  @DisplayName("A file name without a usable file name part is rejected with a message")
+  void shouldRejectFileNameWhichIsOnlyADirectoryReference() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    mockMvc
+        .perform(multipart("/fileupload").file(directoryReferenceFile()).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=File+name+is+not+allowed"));
+
+    Assertions.assertThat(uploadedFiles()).isEmpty();
+  }
+
+  @Test
   @DisplayName("An uploaded file is listed on the files page")
   void shouldListUploadedFile() throws Exception {
     mockMvc.perform(multipart("/fileupload").file(testFile()).principal(AUTHENTICATION));
@@ -146,5 +177,17 @@ class FileServerTest {
   private MockMultipartFile testFile() {
     return new MockMultipartFile(
         "file", "test.txt", "text/plain", "test".getBytes(StandardCharsets.UTF_8));
+  }
+
+  /** Upload which tries to leave the directory of the user with a relative file name. */
+  private MockMultipartFile traversingFile() {
+    return new MockMultipartFile(
+        "file", "../../passwords.txt", "text/plain", "traversed".getBytes(StandardCharsets.UTF_8));
+  }
+
+  /** Upload with a name which does not contain a file name at all. */
+  private MockMultipartFile directoryReferenceFile() {
+    return new MockMultipartFile(
+        "file", "../", "text/plain", "traversed".getBytes(StandardCharsets.UTF_8));
   }
 }

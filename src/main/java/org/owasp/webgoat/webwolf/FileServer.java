@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.owasp.webgoat.container.SafePaths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -47,6 +48,7 @@ public class FileServer {
 
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
+  static final String UPLOAD_NAME_NOT_ALLOWED = "File name is not allowed";
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -83,16 +85,30 @@ public class FileServer {
           new ModelMap().addAttribute("uploadSuccess", NOTHING_TO_UPLOAD));
     }
 
-    var destinationDir = new File(fileLocation, username);
-    destinationDir.mkdirs();
+    File destinationFile;
+    try {
+      // The user name and the name supplied by the caller are reduced to bare path
+      // segments and the result is verified to stay inside the file server location, so a
+      // name such as '../../file' can no longer be written to or deleted from outside the
+      // directory of the user.
+      destinationFile =
+          SafePaths.resolveWithin(
+              new File(fileLocation), username, multipartFile.getOriginalFilename());
+    } catch (IOException e) {
+      log.debug("Upload rejected, {} supplied an illegal file name", username);
+      return new ModelAndView(
+          new RedirectView("files", true),
+          new ModelMap().addAttribute("uploadSuccess", UPLOAD_NAME_NOT_ALLOWED));
+    }
+
+    destinationFile.getParentFile().mkdirs();
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
-      Files.deleteIfExists(destinationFile);
-      Files.copy(is, destinationFile);
+      Files.deleteIfExists(destinationFile.toPath());
+      Files.copy(is, destinationFile.toPath());
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", destinationFile);
 
     return new ModelAndView(
         new RedirectView("files", true),
