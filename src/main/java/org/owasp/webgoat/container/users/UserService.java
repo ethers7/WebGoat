@@ -7,6 +7,7 @@ package org.owasp.webgoat.container.users;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.owasp.webgoat.container.lessons.Initializable;
@@ -20,6 +21,13 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class UserService implements UserDetailsService {
+
+  // Every user gets its own database schema which is named after the user. A schema name is an
+  // identifier and can therefore never be bound as a statement parameter, so the name is restricted
+  // to this fixed set of characters before it is used. User names do not always pass through
+  // UserForm (an OAuth login creates a user straight from the principal name), so quotes,
+  // whitespace and statement separators are rejected here instead of ending up in the DDL below.
+  private static final Pattern VALID_SCHEMA_NAME = Pattern.compile("[a-zA-Z0-9_.@-]{1,45}");
 
   private final UserRepository userRepository;
   private final UserProgressRepository userTrackerRepository;
@@ -42,6 +50,9 @@ public class UserService implements UserDetailsService {
   }
 
   public void addUser(String username, String password) {
+    // fail before anything is stored: the name is used as a schema identifier when the lessons for
+    // this user are created
+    validateSchemaName(username);
     // get user if there exists one by the name
     var userAlreadyExists = userRepository.existsByUsername(username);
     var webGoatUser = userRepository.save(new WebGoatUser(username, password));
@@ -75,8 +86,18 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    // only a name which passed the allowlist is used as delimited identifier in the statement
+    var schema = validateSchemaName(webGoatUser.getUsername());
+    jdbcTemplate.execute("CREATE SCHEMA \"" + schema + "\" authorization dba");
+    flywayLessons.apply(schema).migrate();
+  }
+
+  private static String validateSchemaName(String username) {
+    if (username == null || !VALID_SCHEMA_NAME.matcher(username).matches()) {
+      throw new IllegalArgumentException(
+          "A user name may only contain letters, digits, '_', '.', '@' or '-'");
+    }
+    return username;
   }
 
   public List<WebGoatUser> getAllUsers() {

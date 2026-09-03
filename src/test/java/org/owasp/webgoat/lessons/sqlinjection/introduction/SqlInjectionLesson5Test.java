@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.sql.SQLException;
+import org.assertj.core.api.Assertions;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -56,5 +57,28 @@ public class SqlInjectionLesson5Test extends LessonTest {
                 .param("query", "select * from grant_rights"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
+  }
+
+  /**
+   * The assignment builds the grant statement from allowlisted literals only, so a second statement
+   * appended to the submitted text is rejected instead of being executed. It is kept as a
+   * regression case: the table has to survive it.
+   */
+  @Test
+  public void appendedStatementShouldBeRejected() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SqlInjection/attack5")
+                .param(
+                    "query",
+                    "grant select on grant_rights to unauthorized_user; drop table grant_rights"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
+
+    try (var connection = dataSource.getConnection();
+        var statement = connection.prepareStatement("select count(*) from grant_rights")) {
+      var results = statement.executeQuery();
+      Assertions.assertThat(results.next()).isTrue();
+    }
   }
 }

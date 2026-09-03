@@ -6,6 +6,7 @@ package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.container.plugins.LessonTest;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+/**
+ * The lesson binds the account name as a parameter, so none of the payloads below reaches the SQL
+ * parser any more. They are kept as regression cases: every one of them must be treated as a plain
+ * last name, which matches no row, and must never return data from user_system_data.
+ */
 public class SqlInjectionLesson6aTest extends LessonTest {
 
   @Test
@@ -26,7 +32,19 @@ public class SqlInjectionLesson6aTest extends LessonTest {
   }
 
   @Test
-  public void wrongNumberOfColumns() throws Exception {
+  public void knownAccountShouldDisplayData() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
+                .param("userid_6a", "Smith"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.output", containsString("USERID")))
+        .andExpect(jsonPath("$.output", not(containsString("passW0rD"))));
+  }
+
+  @Test
+  public void unionWithWrongNumberOfColumnsIsTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
@@ -36,16 +54,12 @@ public class SqlInjectionLesson6aTest extends LessonTest {
                         + " --"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                containsString(
-                    "column number mismatch detected in rows of UNION, INTERSECT, EXCEPT, or VALUES"
-                        + " operation")));
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))))
+        .andExpect(jsonPath("$.output", not(containsString("passW0rD"))));
   }
 
   @Test
-  public void wrongDataTypeOfColumns() throws Exception {
+  public void unionWithWrongDataTypeOfColumnsIsTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
@@ -54,18 +68,21 @@ public class SqlInjectionLesson6aTest extends LessonTest {
                     "Smith' union select 1,password, 1,'2','3', '4',1 from user_system_data --"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(jsonPath("$.output", containsString("incompatible data types in combination")));
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))))
+        .andExpect(jsonPath("$.output", not(containsString("passW0rD"))));
   }
 
+  /** The payload which used to solve the assignment by appending a second statement. */
   @Test
-  public void correctSolution() throws Exception {
+  public void chainedStatementNoLongerReturnsSystemData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
                 .param("userid_6a", "Smith'; SELECT * from user_system_data; --"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("passW0rD")));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))))
+        .andExpect(jsonPath("$.output", not(containsString("passW0rD"))));
   }
 
   @Test
@@ -79,14 +96,16 @@ public class SqlInjectionLesson6aTest extends LessonTest {
         .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))));
   }
 
+  /** The payload which used to solve the assignment without using a UNION. */
   @Test
-  public void noUnionUsed() throws Exception {
+  public void chainedSelectNoLongerReturnsSystemData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjectionAdvanced/attack6a")
                 .param("userid_6a", "S'; Select * from user_system_data; --"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("UNION")));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))))
+        .andExpect(jsonPath("$.output", not(containsString("passW0rD"))));
   }
 }

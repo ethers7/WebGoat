@@ -5,6 +5,7 @@
 package org.owasp.webgoat.container.users;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -41,5 +42,28 @@ class UserServiceTest {
             mailboxRepository);
     Assertions.assertThatThrownBy(() -> userService.loadUserByUsername("unknown"))
         .isInstanceOf(UsernameNotFoundException.class);
+  }
+
+  /**
+   * The user name becomes the name of the database schema which holds the lessons of that user. A
+   * schema name is an identifier and can never be bound as a statement parameter, so a name which
+   * carries SQL syntax has to be rejected before anything is stored or executed.
+   */
+  @Test
+  void shouldRejectUserNameWhichIsNotAValidSchemaName() {
+    UserService userService =
+        new UserService(
+            userRepository,
+            userTrackerRepository,
+            jdbcTemplate,
+            flywayLessons,
+            List.of(),
+            mailboxRepository);
+
+    Assertions.assertThatThrownBy(
+            () -> userService.addUser("guest\" authorization dba; DROP SCHEMA \"guest", "password"))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    verifyNoInteractions(userRepository, jdbcTemplate, flywayLessons);
   }
 }
