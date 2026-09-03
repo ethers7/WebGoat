@@ -8,6 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.security.Principal;
 import java.util.Base64;
 import java.util.Random;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EncodingAssignment implements AssignmentEndpoint {
 
+  private static final String BASIC_AUTH_SECRET = "basicAuthSecret";
+
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
   }
@@ -30,15 +33,16 @@ public class EncodingAssignment implements AssignmentEndpoint {
   @ResponseBody
   public String getBasicAuth(HttpServletRequest request) {
 
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    String username = request.getUserPrincipal().getName();
-    if (basicAuth == null) {
-      String password =
+    // Only the server-chosen secret is stored in the session; the username is taken from
+    // the authenticated principal on each request, so no request data becomes session state.
+    String password = (String) request.getSession().getAttribute(BASIC_AUTH_SECRET);
+    if (password == null) {
+      String secret =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
-      basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+      request.getSession().setAttribute(BASIC_AUTH_SECRET, secret);
+      password = secret;
     }
-    return "Authorization: Basic ".concat(basicAuth);
+    return "Authorization: Basic ".concat(getBasicAuth(currentUsername(request), password));
   }
 
   @PostMapping("/crypto/encoding/basic-auth")
@@ -47,14 +51,21 @@ public class EncodingAssignment implements AssignmentEndpoint {
       HttpServletRequest request,
       @RequestParam String answer_user,
       @RequestParam String answer_pwd) {
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    if (basicAuth != null
+    String password = (String) request.getSession().getAttribute(BASIC_AUTH_SECRET);
+    String username = currentUsername(request);
+    if (password != null
+        && username != null
         && answer_user != null
         && answer_pwd != null
-        && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
+        && getBasicAuth(username, password).equals(getBasicAuth(answer_user, answer_pwd))) {
       return success(this).feedback("crypto-encoding.success").build();
     } else {
       return failed(this).feedback("crypto-encoding.empty").build();
     }
+  }
+
+  private static String currentUsername(HttpServletRequest request) {
+    Principal principal = request.getUserPrincipal();
+    return principal == null ? null : principal.getName();
   }
 }
