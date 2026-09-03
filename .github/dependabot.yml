@@ -4,11 +4,22 @@ updates:
         directory: "/"
         schedule:
             interval: "weekly"
+        # Let newly published versions age before proposing them, so a
+        # compromised release that gets yanked is never picked up.
+        cooldown:
+            default-days: 7
+            semver-patch-days: 3
     -   package-ecosystem: "maven"
         directory: "/"
         schedule:
             interval: "weekly"
+        cooldown:
+            default-days: 7
+            semver-patch-days: 3
     -   package-ecosystem: "docker"
         directory: "/"
         schedule:
             interval: "weekly"
+        cooldown:
+            default-days: 7
+            semver-patch-days: 3
