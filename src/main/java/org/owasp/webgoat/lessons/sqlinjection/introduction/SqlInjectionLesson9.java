@@ -92,10 +92,13 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
-    results.first();
-    return results.getInt(1);
+    try (PreparedStatement statement =
+        connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE)) {
+      try (ResultSet results = statement.executeQuery()) {
+        results.first();
+        return results.getInt(1);
+      }
+    }
   }
 
   private int getMaxSalary(Connection connection) throws SQLException {
