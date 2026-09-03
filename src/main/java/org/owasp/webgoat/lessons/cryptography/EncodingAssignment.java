@@ -8,8 +8,8 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
 import java.util.regex.Pattern;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -31,6 +31,8 @@ public class EncodingAssignment implements AssignmentEndpoint {
 
   private static final String BASIC_AUTH_SECRET = "basicAuthSecret";
 
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
   }
@@ -42,7 +44,8 @@ public class EncodingAssignment implements AssignmentEndpoint {
     String password = (String) request.getSession().getAttribute(BASIC_AUTH_SECRET);
     if (password == null) {
       // Only server generated state is stored in the session, never request supplied data.
-      password = HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
+      int index = SECURE_RANDOM.nextInt(HashingAssignment.SECRETS.length);
+      password = HashingAssignment.SECRETS[index];
       request.getSession().setAttribute(BASIC_AUTH_SECRET, password);
     }
     return "Authorization: Basic ".concat(getBasicAuth(validatedUsername(request), password));
