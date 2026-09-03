@@ -75,12 +75,28 @@ class JWTHeaderJKUEndpointTest extends LessonTest {
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
+  @Test
+  @DisplayName("When the jku claim points to a host which is not approved the call should fail")
+  void shouldFailWhenJkuHostIsNotApproved() throws Exception {
+    setupJsonWebKeySetInWebWolf();
+    var token = createTokenAndSignIt("http://webgoat-attacker.example.com/files/jwks");
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/jku/delete").param("token", token).content(""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
   private String createTokenAndSignIt() {
+    return createTokenAndSignIt("http://localhost:%d/files/jwks".formatted(port));
+  }
+
+  private String createTokenAndSignIt(String jku) {
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
     var token =
         Jwts.builder()
-            .setHeaderParam("jku", "http://localhost:%d/files/jwks".formatted(port))
+            .setHeaderParam("jku", jku)
             .setClaims(claims)
             .signWith(RS256, this.keyPair.getPrivate())
             .compact();
