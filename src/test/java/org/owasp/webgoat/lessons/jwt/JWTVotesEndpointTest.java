@@ -89,7 +89,8 @@ public class JWTVotesEndpointTest extends LessonTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("user", "Guest"))
         .andExpect(status().isUnauthorized())
-        .andExpect(cookie().value("access_token", ""));
+        .andExpect(cookie().value("access_token", ""))
+        .andExpect(cookie().httpOnly("access_token", true));
   }
 
   @Test
@@ -100,7 +101,8 @@ public class JWTVotesEndpointTest extends LessonTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("user", "Tom"))
         .andExpect(status().isOk())
-        .andExpect(cookie().value("access_token", containsString("eyJhbGciOiJIUzUxMiJ9.")));
+        .andExpect(cookie().value("access_token", containsString("eyJhbGciOiJIUzUxMiJ9.")))
+        .andExpect(cookie().httpOnly("access_token", true));
   }
 
   @Test
