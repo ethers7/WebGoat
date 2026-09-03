@@ -20,6 +20,11 @@ import org.owasp.webgoat.container.plugins.LessonTest;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+/**
+ * The endpoint binds the kid header claim as a parameter, so the payload below can no longer make
+ * the endpoint resolve a signing key the caller chose. It is kept as a regression case: the forged
+ * token has to be rejected and must not solve the assignment.
+ */
 public class JWTHeaderKIDEndpointTest extends LessonTest {
 
   private static final String TOKEN_JERRY =
@@ -31,7 +36,7 @@ public class JWTHeaderKIDEndpointTest extends LessonTest {
   }
 
   @Test
-  public void solveAssignment() throws Exception {
+  public void injectedKidShouldNotSolveAssignment() throws Exception {
     String key = "deletingTom";
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
@@ -46,7 +51,7 @@ public class JWTHeaderKIDEndpointTest extends LessonTest {
     mockMvc
         .perform(MockMvcRequestBuilders.post("/JWT/kid/delete").param("token", token).content(""))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
   @Test

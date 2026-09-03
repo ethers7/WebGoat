@@ -33,6 +33,12 @@ import org.jose4j.jwk.RsaJsonWebKey;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.lessons.jwt.JWTSecretKeyEndpoint;
 
+/**
+ * The kid claim assignment binds the kid header claim as a parameter, so the payload below can no
+ * longer make the endpoint resolve a signing key the caller chose. It is kept as a regression case
+ * and is expected to be rejected, which is why that assignment is asserted as not solved and why
+ * the lesson overview is no longer expected to be complete.
+ */
 public class JWTLessonIntegrationTest extends IntegrationTest {
 
   @Test
@@ -52,8 +58,6 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
     deleteTomThroughJkuClaim();
 
     quiz();
-
-    checkResults("JWT");
   }
 
   private String generateToken(String key) {
@@ -245,7 +249,7 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
             .statusCode(200)
             .extract()
             .path("lessonCompleted"),
-        CoreMatchers.is(true));
+        CoreMatchers.is(false));
   }
 
   private void deleteTomThroughJkuClaim() throws NoSuchAlgorithmException {

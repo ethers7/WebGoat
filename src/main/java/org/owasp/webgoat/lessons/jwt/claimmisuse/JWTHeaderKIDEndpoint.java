@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.jwt.claimmisuse;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -68,14 +69,18 @@ public class JWTHeaderKIDEndpoint implements AssignmentEndpoint {
                       @Override
                       public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
                         final String kid = (String) header.get("kid");
-                        try (var connection = dataSource.getConnection()) {
-                          ResultSet rs =
-                              connection
-                                  .createStatement()
-                                  .executeQuery(
-                                      "SELECT key FROM jwt_keys WHERE id = '" + kid + "'");
-                          while (rs.next()) {
-                            return TextCodec.BASE64.decode(rs.getString(1));
+                        // The signature of the token is not verified yet, so the kid header claim
+                        // is attacker controlled and is bound as a parameter instead of being
+                        // concatenated into the query.
+                        try (var connection = dataSource.getConnection();
+                            PreparedStatement statement =
+                                connection.prepareStatement(
+                                    "SELECT key FROM jwt_keys WHERE id = ?")) {
+                          statement.setString(1, kid);
+                          try (ResultSet rs = statement.executeQuery()) {
+                            while (rs.next()) {
+                              return TextCodec.BASE64.decode(rs.getString(1));
+                            }
                           }
                         } catch (SQLException e) {
                           errorMessage[0] = e.getMessage();
@@ -97,7 +102,9 @@ public class JWTHeaderKIDEndpoint implements AssignmentEndpoint {
         } else {
           return failed(this).feedback("jwt-final-not-tom").build();
         }
-      } catch (JwtException e) {
+      } catch (JwtException | IllegalArgumentException e) {
+        // A kid which matches no row leaves the resolver without key material, the library reports
+        // that as an IllegalArgumentException which is a rejected token just as well.
         return failed(this).feedback("jwt-invalid-token").output(e.toString()).build();
       }
     }
