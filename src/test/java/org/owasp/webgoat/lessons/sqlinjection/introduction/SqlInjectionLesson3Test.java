@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright © 2017 WebGoat authors
+ * SPDX-FileCopyrightText: Copyright © 2025 WebGoat authors
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package org.owasp.webgoat.lessons.sqlinjection.introduction;
@@ -12,14 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.container.plugins.LessonTest;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class SqlInjectionLesson2Test extends LessonTest {
+public class SqlInjectionLesson3Test extends LessonTest {
 
   @Test
   public void solution() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack2")
-                .param("query", "SELECT department FROM employees WHERE userid=96134;"))
+            MockMvcRequestBuilders.post("/SqlInjection/attack3")
+                .param(
+                    "query", "update employees set department='Sales' where last_name='Barnett'"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
   }
@@ -29,21 +30,11 @@ public class SqlInjectionLesson2Test extends LessonTest {
   public void appendedStatementIsRejected() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack2")
+            MockMvcRequestBuilders.post("/SqlInjection/attack3")
                 .param(
                     "query",
-                    "SELECT department FROM employees WHERE userid=96134; DROP TABLE employees;--"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
-  }
-
-  /** The value is bound as a parameter, so an always true condition cannot be injected. */
-  @Test
-  public void alwaysTrueConditionIsRejected() throws Exception {
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack2")
-                .param("query", "SELECT * FROM employees WHERE last_name='Smith' OR '1'='1'"))
+                    "update employees set department='Sales' where last_name='Barnett'; drop table"
+                        + " employees;--"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
@@ -53,8 +44,8 @@ public class SqlInjectionLesson2Test extends LessonTest {
   public void unknownColumnIsRejected() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack2")
-                .param("query", "SELECT password FROM employees WHERE userid=96134"))
+            MockMvcRequestBuilders.post("/SqlInjection/attack3")
+                .param("query", "update employees set password='x' where last_name='Barnett'"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }

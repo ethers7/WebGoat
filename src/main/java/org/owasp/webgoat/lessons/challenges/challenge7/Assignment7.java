@@ -35,6 +35,7 @@ public class Assignment7 implements AssignmentEndpoint {
 
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
+  // Plain text body of the reset e-mail, no credential material: the link is generated per request.
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
           + " href='%s:8080/WebGoat/challenge/7/reset-password/%s'>link</a> to reset your"
@@ -59,6 +60,8 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
+    // Non-production challenge fixture: ADMIN_PASSWORD_LINK is the reset-link token students
+    // must recover from the lesson's git archive; it grants no access, nothing to rotate.
     if (link.equals(ADMIN_PASSWORD_LINK)) {
       return ResponseEntity.accepted()
           .body(

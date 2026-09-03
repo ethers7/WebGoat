@@ -5,6 +5,7 @@
 package org.owasp.webgoat.container;
 
 import java.io.File;
+import java.io.IOException;
 import org.owasp.webgoat.container.session.LessonSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -27,8 +28,11 @@ import org.springframework.web.client.RestTemplate;
 public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
-  public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
-    return new File(webgoatHome);
+  public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome)
+      throws IOException {
+    // Canonicalize the configured directory so relative or '..' segments cannot make the plugin
+    // target directory point somewhere else than the configured location.
+    return new File(webgoatHome).getCanonicalFile();
   }
 
   @Bean

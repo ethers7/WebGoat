@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.HashMap;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
@@ -79,6 +80,20 @@ class DeserializeTest extends LessonTest {
             jsonPath(
                 "$.feedback",
                 CoreMatchers.is(messages.getMessage("insecure-deserialization.expired"))))
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  void classWhichIsNotOnTheAllowListIsRejected() throws Exception {
+    // HashMap stands in for a gadget class: it must never be resolved from the token.
+    String token = SerializationHelper.toString(new HashMap<String, String>());
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/InsecureDeserialization/task").param("token", token))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath(
+                "$.feedback",
+                CoreMatchers.is(messages.getMessage("insecure-deserialization.wrongobject"))))
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 

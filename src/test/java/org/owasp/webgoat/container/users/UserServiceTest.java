@@ -5,6 +5,9 @@
 package org.owasp.webgoat.container.users;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -26,20 +29,50 @@ class UserServiceTest {
   @Mock private UserProgressRepository userTrackerRepository;
   @Mock private JdbcTemplate jdbcTemplate;
   @Mock private Function<String, Flyway> flywayLessons;
+  @Mock private Flyway flyway;
   @Mock private MailboxRepository mailboxRepository;
+
+  private UserService userService() {
+    return new UserService(
+        userRepository,
+        userTrackerRepository,
+        jdbcTemplate,
+        flywayLessons,
+        List.of(),
+        mailboxRepository);
+  }
 
   @Test
   void shouldThrowExceptionWhenUserIsNotFound() {
     when(userRepository.findByUsername(any())).thenReturn(null);
-    UserService userService =
-        new UserService(
-            userRepository,
-            userTrackerRepository,
-            jdbcTemplate,
-            flywayLessons,
-            List.of(),
-            mailboxRepository);
-    Assertions.assertThatThrownBy(() -> userService.loadUserByUsername("unknown"))
+
+    Assertions.assertThatThrownBy(() -> userService().loadUserByUsername("unknown"))
         .isInstanceOf(UsernameNotFoundException.class);
+  }
+
+  @Test
+  void shouldCreateSchemaForAValidUsername() {
+    when(userRepository.save(any())).thenReturn(new WebGoatUser("someuser", "password"));
+    when(flywayLessons.apply("someuser")).thenReturn(flyway);
+
+    userService().addUser("someuser", "password");
+
+    verify(jdbcTemplate).execute("CREATE SCHEMA \"someuser\" authorization dba");
+    verify(flyway).migrate();
+  }
+
+  /**
+   * A schema name is an identifier and can therefore not be bound as a parameter, so a username
+   * which could change the meaning of the statement is rejected before it is used.
+   */
+  @Test
+  void shouldRejectUsernameWhichCannotBeUsedAsSchemaName() {
+    String maliciousUsername = "webgoat\" authorization dba; drop schema \"webgoat";
+    when(userRepository.save(any())).thenReturn(new WebGoatUser(maliciousUsername, "password"));
+
+    Assertions.assertThatThrownBy(() -> userService().addUser(maliciousUsername, "password"))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    verify(jdbcTemplate, never()).execute(anyString());
   }
 }

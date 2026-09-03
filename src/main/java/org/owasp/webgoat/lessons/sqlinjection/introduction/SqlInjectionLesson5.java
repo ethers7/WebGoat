@@ -9,9 +9,12 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import jakarta.annotation.PostConstruct;
 import java.sql.Connection;
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -29,6 +32,21 @@ import org.springframework.web.bind.annotation.RestController;
       "SqlStringInjectionHint5-4"
     })
 public class SqlInjectionLesson5 implements AssignmentEndpoint {
+
+  private static final List<String> ALLOWED_PRIVILEGES =
+      List.of("all", "delete", "insert", "select", "update");
+
+  /**
+   * Matches a simple {@code GRANT <privilege> ON <table> TO <user>} statement. Privileges,
+   * identifiers and user names cannot be bound as parameters, so the privilege is resolved against
+   * {@link #ALLOWED_PRIVILEGES} and the table and the grantee may only consist of identifier
+   * characters, which means the submitted text can never change the meaning of the statement.
+   */
+  private static final Pattern GRANT_STATEMENT =
+      Pattern.compile(
+          "\\s*grant\\s+(?<privilege>\\w+)\\s+on\\s+(?<table>[a-z]\\w{0,29})\\s+to\\s+"
+              + "(?<grantee>[a-z]\\w{0,29})\\s*;?\\s*",
+          Pattern.CASE_INSENSITIVE);
 
   private final LessonDataSource dataSource;
 
@@ -58,16 +76,27 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String query) {
+    Matcher matcher = GRANT_STATEMENT.matcher(query == null ? "" : query);
+    if (!matcher.matches()) {
+      return failed(this).output(rejected(query)).build();
+    }
+    String privilege = matcher.group("privilege").toLowerCase(Locale.ROOT);
+    if (!ALLOWED_PRIVILEGES.contains(privilege)) {
+      return failed(this).output(rejected(query)).build();
+    }
+    // Only an allow-listed privilege and validated identifiers are used in the statement.
+    String table = matcher.group("table");
+    String grantee = matcher.group("grantee");
+    String grant = "GRANT " + privilege + " ON " + table + " TO " + grantee;
+
     try (Connection connection = dataSource.getConnection()) {
-      try (Statement statement =
-          connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query);
-        if (checkSolution(connection)) {
-          return success(this).build();
-        }
-        return failed(this).output("Your query was: " + query).build();
+      try (PreparedStatement statement = connection.prepareStatement(grant)) {
+        statement.execute();
       }
+      if (checkSolution(connection)) {
+        return success(this).build();
+      }
+      return failed(this).output("Your query was: " + query).build();
     } catch (Exception e) {
       return failed(this)
           .output(
@@ -89,5 +118,11 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
     } catch (SQLException throwables) {
       return false;
     }
+  }
+
+  private static String rejected(String query) {
+    return "Only a GRANT statement with a known privilege is accepted."
+        + "<br> Your query was: "
+        + query;
   }
 }

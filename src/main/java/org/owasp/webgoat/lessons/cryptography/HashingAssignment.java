@@ -10,52 +10,69 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
+import java.security.SecureRandom;
+import java.util.Set;
+import java.util.regex.Pattern;
 import javax.xml.bind.DatatypeConverter;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @AssignmentHints({"crypto-hashing.hints.1", "crypto-hashing.hints.2"})
 public class HashingAssignment implements AssignmentEndpoint {
   public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
 
-  @RequestMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
+  private static final int MD5_HASH_LENGTH = 32;
+  private static final int SHA256_HASH_LENGTH = 64;
+
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+  /**
+   * The session is trusted state, so only values which this lesson generated itself are allowed to
+   * cross into it: one of the fixed lesson words and an upper case hex digest of that word.
+   */
+  private static final Set<String> ALLOWED_SECRETS = Set.of(SECRETS);
+
+  private static final Pattern HEX_DIGEST = Pattern.compile("[0-9A-F]+");
+
+  @GetMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getMd5(HttpServletRequest request) throws NoSuchAlgorithmException {
 
     String md5Hash = (String) request.getSession().getAttribute("md5Hash");
     if (md5Hash == null) {
 
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = SECRETS[SECURE_RANDOM.nextInt(SECRETS.length)];
 
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update(secret.getBytes());
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
-      request.getSession().setAttribute("md5Hash", md5Hash);
-      request.getSession().setAttribute("md5Secret", secret);
+      request.getSession().setAttribute("md5Hash", validatedHash(md5Hash, MD5_HASH_LENGTH));
+      request.getSession().setAttribute("md5Secret", validatedSecret(secret));
     }
     return md5Hash;
   }
 
-  @RequestMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getSha256(HttpServletRequest request) throws NoSuchAlgorithmException {
 
     String sha256 = (String) request.getSession().getAttribute("sha256");
     if (sha256 == null) {
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = SECRETS[SECURE_RANDOM.nextInt(SECRETS.length)];
       sha256 = getHash(secret, "SHA-256");
-      request.getSession().setAttribute("sha256Hash", sha256);
-      request.getSession().setAttribute("sha256Secret", secret);
+      request.getSession().setAttribute("sha256Hash", validatedHash(sha256, SHA256_HASH_LENGTH));
+      request.getSession().setAttribute("sha256Secret", validatedSecret(secret));
     }
     return sha256;
   }
@@ -71,6 +88,8 @@ public class HashingAssignment implements AssignmentEndpoint {
     String sha256Secret = (String) request.getSession().getAttribute("sha256Secret");
 
     if (answer_pwd1 != null && answer_pwd2 != null) {
+      // Non-production lesson fixtures: both answers are compared with the randomly chosen
+      // SECRETS word kept in the session; no real credential is involved, nothing to rotate.
       if (answer_pwd1.equals(md5Secret) && answer_pwd2.equals(sha256Secret)) {
         return success(this).feedback("crypto-hashing.success").build();
       } else if (answer_pwd1.equals(md5Secret) || answer_pwd2.equals(sha256Secret)) {
@@ -85,5 +104,29 @@ public class HashingAssignment implements AssignmentEndpoint {
     md.update(secret.getBytes());
     byte[] digest = md.digest();
     return DatatypeConverter.printHexBinary(digest).toUpperCase();
+  }
+
+  /**
+   * Validates a digest before it is stored in the session, so that only a hex digest of the
+   * expected length can move from the request handling into trusted session scope.
+   */
+  private static String validatedHash(String hash, int expectedLength) {
+    if (hash == null || hash.length() != expectedLength || !HEX_DIGEST.matcher(hash).matches()) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Generated hash is not a valid digest");
+    }
+    return hash;
+  }
+
+  /**
+   * Validates a secret before it is stored in the session, so that only one of the fixed lesson
+   * words can move from the request handling into trusted session scope.
+   */
+  private static String validatedSecret(String secret) {
+    if (!ALLOWED_SECRETS.contains(secret)) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Secret is not one of the lesson secrets");
+    }
+    return secret;
   }
 }

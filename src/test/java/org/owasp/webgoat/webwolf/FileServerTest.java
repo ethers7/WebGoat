@@ -62,8 +62,10 @@ class FileServerTest {
     mockMvc
         .perform(get("/file-server-location"))
         .andExpect(status().isOk())
-        .andExpect(result -> Assertions.assertThat(result.getResponse().getContentAsString())
-            .isEqualTo(fileServerLocation.toString()));
+        .andExpect(
+            result ->
+                Assertions.assertThat(result.getResponse().getContentAsString())
+                    .isEqualTo(fileServerLocation.toString()));
   }
 
   @Test
@@ -82,6 +84,20 @@ class FileServerTest {
         .andExpect(redirectedUrl("files?uploadSuccess=File+uploaded+successful"));
 
     Assertions.assertThat(userDirectory().resolve("test.txt")).content().isEqualTo("test");
+  }
+
+  @Test
+  @DisplayName("An upload with a path in its file name is rejected")
+  void shouldRejectUploadEscapingTheUserDirectory() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalUpload()).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=Invalid+file+name"));
+
+    Assertions.assertThat(uploadedFiles()).isEmpty();
+    Assertions.assertThat(fileServerLocation.getParent().resolve("escaped.txt")).doesNotExist();
   }
 
   @Test
@@ -129,6 +145,17 @@ class FileServerTest {
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 
+  @Test
+  @DisplayName("A message which is not one of the upload messages is rejected")
+  void shouldRejectUnknownUploadMessage() throws Exception {
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "<script>alert(1)</script>")
+                .principal(AUTHENTICATION))
+        .andExpect(status().isBadRequest());
+  }
+
   private Path userDirectory() {
     return fileServerLocation.resolve(USERNAME);
   }
@@ -141,6 +168,11 @@ class FileServerTest {
 
   private MockMultipartFile emptyUpload() {
     return new MockMultipartFile("file", "", "application/octet-stream", new byte[0]);
+  }
+
+  private MockMultipartFile traversalUpload() {
+    return new MockMultipartFile(
+        "file", "../../escaped.txt", "text/plain", "escaped".getBytes(StandardCharsets.UTF_8));
   }
 
   private MockMultipartFile testFile() {

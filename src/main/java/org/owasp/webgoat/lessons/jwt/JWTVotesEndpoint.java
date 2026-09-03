@@ -19,6 +19,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.impl.TextCodec;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.Instant;
@@ -107,7 +108,8 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
   }
 
   @GetMapping("/JWT/votings/login")
-  public void login(@RequestParam("user") String user, HttpServletResponse response) {
+  public void login(
+      @RequestParam("user") String user, HttpServletRequest request, HttpServletResponse response) {
     if (validUsers.contains(user)) {
       Claims claims = Jwts.claims().setIssuedAt(Date.from(Instant.now().plus(Duration.ofDays(10))));
       claims.put("admin", "false");
@@ -118,11 +120,24 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
               .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
               .compact();
       Cookie cookie = new Cookie("access_token", token);
+      // The voting page never reads the token from JavaScript (the browser attaches it
+      // automatically), so keep it out of reach of client-side scripts.
+      cookie.setHttpOnly(true);
+      // Send the token cookie only over HTTPS when the request itself is served over HTTPS;
+      // WebGoat can also be started with server.ssl.enabled=false, where a Secure cookie would
+      // be dropped by the browser.
+      if (request.isSecure()) {
+        cookie.setSecure(true);
+      }
       response.addCookie(cookie);
       response.setStatus(HttpStatus.OK.value());
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     } else {
       Cookie cookie = new Cookie("access_token", "");
+      cookie.setHttpOnly(true);
+      if (request.isSecure()) {
+        cookie.setSecure(true);
+      }
       response.addCookie(cookie);
       response.setStatus(HttpStatus.UNAUTHORIZED.value());
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);

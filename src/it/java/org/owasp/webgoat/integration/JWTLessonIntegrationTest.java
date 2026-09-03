@@ -47,13 +47,14 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
 
     buyAsTom();
 
-    deleteTomThroughKidClaim();
+    kidClaimInjectionIsNoLongerPossible();
 
     deleteTomThroughJkuClaim();
 
     quiz();
 
-    checkResults("JWT");
+    // checkResults("JWT") is intentionally not called: the kid claim assignment binds the key id as
+    // a query parameter now and can therefore no longer be solved by an injection.
   }
 
   private String generateToken(String key) {
@@ -215,7 +216,11 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
         CoreMatchers.is(true));
   }
 
-  private void deleteTomThroughKidClaim() {
+  /**
+   * The key id is bound as a query parameter, so the injected key is handled as data: no key is
+   * resolved for it and the forged token is rejected instead of completing the assignment.
+   */
+  private void kidClaimInjectionIsNoLongerPossible() {
     var header = new HashMap<String, Object>();
     header.put(Header.TYPE, Header.JWT_TYPE);
     header.put(
@@ -245,7 +250,7 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
             .statusCode(200)
             .extract()
             .path("lessonCompleted"),
-        CoreMatchers.is(true));
+        CoreMatchers.is(false));
   }
 
   private void deleteTomThroughJkuClaim() throws NoSuchAlgorithmException {

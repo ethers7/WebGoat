@@ -8,8 +8,10 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.path.json.exception.JsonPathException;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.Test;
 public class LabelAndHintIntegrationTest extends IntegrationTest {
 
   static final String ESCAPE_JSON_PATH_CHAR = "\'";
+  static final Path I18N_DIRECTORY = Path.of("src", "main", "resources", "i18n");
 
   @Test
   public void testSingleLabel() {
@@ -163,8 +166,7 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
     } else {
       lang = "_" + lang;
     }
-    try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
+    try (InputStream input = Files.newInputStream(resolveMessages(lang))) {
 
       prop = new Properties();
       // load a properties file
@@ -173,6 +175,19 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
       e.printStackTrace();
     }
     return prop;
+  }
+
+  /**
+   * Resolves the messages file for the given language suffix and rejects languages which resolve
+   * outside of the i18n directory, for example through {@code ..} segments or an absolute path.
+   */
+  private Path resolveMessages(String lang) throws IOException {
+    Path baseDirectory = I18N_DIRECTORY.toAbsolutePath().normalize();
+    Path messages = baseDirectory.resolve("messages" + lang + ".properties").normalize();
+    if (!messages.startsWith(baseDirectory)) {
+      throw new IOException("Language is outside of the i18n directory: " + lang);
+    }
+    return messages;
   }
 
   private void checkLang(Properties propsDefault, String lang) {

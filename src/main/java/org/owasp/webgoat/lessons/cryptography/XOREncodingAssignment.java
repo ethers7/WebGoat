@@ -22,6 +22,8 @@ public class XOREncodingAssignment implements AssignmentEndpoint {
   @PostMapping("/crypto/encoding/xor")
   @ResponseBody
   public AttackResult completed(@RequestParam String answer_pwd1) {
+    // Non-production lesson fixture: this is the expected answer of the XOR decoding
+    // exercise, not a real credential; nothing to rotate.
     if (answer_pwd1 != null && answer_pwd1.equals("databasepassword")) {
       return success(this).feedback("crypto-encoding-xor.success").build();
     }

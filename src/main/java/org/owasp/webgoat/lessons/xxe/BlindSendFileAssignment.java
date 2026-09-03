@@ -53,7 +53,13 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    File targetDirectory;
+    try {
+      targetDirectory = resolveDirectoryForUser(user.getUsername());
+    } catch (IOException e) {
+      log.error("Unable to resolve the lesson directory for the current user");
+      return;
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }
@@ -62,6 +68,20 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
     } catch (IOException e) {
       log.error("Unable to write 'secret.txt' to '{}", targetDirectory);
     }
+  }
+
+  /**
+   * Resolves the directory of the given user inside the lesson directory. Names which resolve
+   * outside of the lesson directory, for example through {@code ..} segments or an absolute path,
+   * are rejected so the secret is never written outside of the lesson directory.
+   */
+  private File resolveDirectoryForUser(String username) throws IOException {
+    var lessonDirectory = new File(webGoatHomeDirectory, "XXE").getCanonicalFile();
+    var userDirectory = new File(lessonDirectory, username).getCanonicalFile();
+    if (!userDirectory.toPath().startsWith(lessonDirectory.toPath())) {
+      throw new IOException("User name resolves outside of the lesson directory: " + username);
+    }
+    return userDirectory;
   }
 
   @PostMapping(path = "/xxe/blind", consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)

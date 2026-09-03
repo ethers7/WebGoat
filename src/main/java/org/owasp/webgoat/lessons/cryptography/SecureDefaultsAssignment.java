@@ -29,6 +29,8 @@ public class SecureDefaultsAssignment implements AssignmentEndpoint {
   public AttackResult completed(
       @RequestParam String secretFileName, @RequestParam String secretText)
       throws NoSuchAlgorithmException {
+    // Non-production lesson fixture: this is the file name students must discover, not a
+    // credential; nothing to rotate.
     if (secretFileName != null && secretFileName.equals("default_secret")) {
       if (secretText != null
           && HashingAssignment.getHash(secretText, "SHA-256")

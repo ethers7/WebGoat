@@ -48,16 +48,18 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
-      uploadedFile.createNewFile();
-      FileCopyUtils.copy(file.getBytes(), uploadedFile);
-
-      if (attemptWasMade(uploadDirectory, uploadedFile)) {
-        return solvedIt(uploadedFile);
+      var requestedFile = new File(uploadDirectory, fullName).getCanonicalFile();
+      if (!isWithin(uploadDirectory, requestedFile)) {
+        // The requested name points outside of the directory of the user, report the attempt
+        // instead of writing a file to an arbitrary location on the file system.
+        return solvedIt(requestedFile);
       }
+      requestedFile.createNewFile();
+      FileCopyUtils.copy(file.getBytes(), requestedFile);
+
       return informationMessage(this)
           .feedback("path-traversal-profile-updated")
-          .feedbackArgs(uploadedFile.getAbsoluteFile())
+          .feedbackArgs(requestedFile.getAbsoluteFile())
           .build();
 
     } catch (IOException e) {
@@ -67,7 +69,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    var uploadDirectory = resolveDirectoryForUser(username);
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
@@ -75,11 +77,22 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     return uploadDirectory;
   }
 
-  private boolean attemptWasMade(File expectedUploadDirectory, File uploadedFile)
-      throws IOException {
-    return !expectedUploadDirectory
-        .getCanonicalPath()
-        .equals(uploadedFile.getParentFile().getCanonicalPath());
+  /**
+   * Resolves the directory of the given user inside the lesson directory. Names which resolve
+   * outside of the lesson directory, for example through {@code ..} segments or an absolute path,
+   * are rejected so no directory outside of the lesson directory is read or removed.
+   */
+  private File resolveDirectoryForUser(String username) throws IOException {
+    var lessonDirectory = new File(this.webGoatHomeDirectory, "PathTraversal").getCanonicalFile();
+    var userDirectory = new File(lessonDirectory, username).getCanonicalFile();
+    if (!isWithin(lessonDirectory, userDirectory)) {
+      throw new IOException("User name resolves outside of the lesson directory: " + username);
+    }
+    return userDirectory;
+  }
+
+  private static boolean isWithin(File directory, File file) throws IOException {
+    return file.getCanonicalFile().toPath().startsWith(directory.getCanonicalFile().toPath());
   }
 
   private AttackResult solvedIt(File uploadedFile) throws IOException {
@@ -100,8 +113,12 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   }
 
   protected byte[] getProfilePictureAsBase64(String username) {
-    var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
-    var profileDirectoryFiles = profilePictureDirectory.listFiles();
+    File[] profileDirectoryFiles;
+    try {
+      profileDirectoryFiles = resolveDirectoryForUser(username).listFiles();
+    } catch (IOException e) {
+      return defaultImage();
+    }
 
     if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
       return Arrays.stream(profileDirectoryFiles)
@@ -109,7 +126,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
           .findFirst()
           .map(
               file -> {
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
+                try (var inputStream = new FileInputStream(file)) {
                   return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
                 } catch (IOException e) {
                   return defaultImage();

@@ -9,6 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.LessonDataSource;
@@ -36,17 +37,15 @@ public class Assignment5 implements AssignmentEndpoint {
     if (!StringUtils.hasText(username_login) || !StringUtils.hasText(password_login)) {
       return failed(this).feedback("required4").build();
     }
-    if (!"Larry".equals(username_login)) {
+    if (!"Larry".equalsIgnoreCase(username_login)) {
       return failed(this).feedback("user.not.larry").feedbackArgs(username_login).build();
     }
     try (var connection = dataSource.getConnection()) {
       PreparedStatement statement =
           connection.prepareStatement(
-              "select password from challenge_users where userid = '"
-                  + username_login
-                  + "' and password = '"
-                  + password_login
-                  + "'");
+              "select password from challenge_users where userid = ? and password = ?");
+      statement.setString(1, username_login.toLowerCase(Locale.ROOT));
+      statement.setString(2, password_login);
       ResultSet resultSet = statement.executeQuery();
 
       if (resultSet.next()) {

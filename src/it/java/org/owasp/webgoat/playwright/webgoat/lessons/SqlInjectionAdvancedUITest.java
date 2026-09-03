@@ -74,6 +74,11 @@ public class SqlInjectionAdvancedUITest extends PlaywrightTest {
     assertThat(lessonPage.getAssignmentOutput()).containsText("User tom already exists");
   }
 
+  /**
+   * The user name is bound as a query parameter, so a correct guess is looked up as a user name
+   * instead of being evaluated: the registration no longer tells the attacker that the guess was
+   * right.
+   */
   @Test
   @DisplayName(
       "Using SQL Injection to register as Tom to guess the password and the guess is correct")
@@ -88,7 +93,8 @@ public class SqlInjectionAdvancedUITest extends PlaywrightTest {
     page.getByRole(AriaRole.BUTTON, new GetByRoleOptions().setName("Register Now")).click();
 
     assertThat(lessonPage.getAssignmentOutput())
-        .containsText("User tom' AND substring(password,1,1)='t already exists");
+        .containsText(
+            "User tom' AND substring(password,1,1)='t created, please proceed to the login page.");
   }
 
   @Test

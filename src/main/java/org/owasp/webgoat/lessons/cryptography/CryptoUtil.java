@@ -19,6 +19,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
+import java.util.Arrays;
 import java.util.Base64;
 import javax.xml.bind.DatatypeConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -138,10 +139,25 @@ public class CryptoUtil {
     privateKeyPem = privateKeyPem.replace("-----END PRIVATE KEY-----", "");
     privateKeyPem = privateKeyPem.replace("\n", "").replace("\r", "");
 
-    byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
+    // No key material is embedded in this class: the PEM is provided by the caller at runtime
+    // (the lesson generates an ephemeral key pair per session, see generateKeyPair()). Long lived
+    // keys must be read from a keystore or external configuration, never from the source tree.
+    byte[] decoded;
+    try {
+      decoded = Base64.getDecoder().decode(privateKeyPem);
+    } catch (IllegalArgumentException e) {
+      // Fail closed on malformed input instead of propagating an unchecked exception.
+      throw new InvalidKeySpecException("Private key is not a valid base64 encoded PKCS#8 key", e);
+    }
 
-    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
-    KeyFactory kf = KeyFactory.getInstance("RSA");
-    return kf.generatePrivate(spec);
+    try {
+      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+      KeyFactory kf = KeyFactory.getInstance("RSA");
+      return kf.generatePrivate(spec);
+    } finally {
+      // PKCS8EncodedKeySpec copies the encoding, so wipe our copy of the private key bytes rather
+      // than leaving the key material on the heap until it is garbage collected.
+      Arrays.fill(decoded, (byte) 0);
+    }
   }
 }

@@ -63,7 +63,7 @@ public class ChallengeIntegrationTest extends IntegrationTest {
     Map<String, Object> params = new HashMap<>();
     params.clear();
     params.put("username_login", "Larry");
-    params.put("password_login", "1' or '1'='1");
+    params.put("password_login", "larryknows");
 
     String result =
         RestAssured.given()

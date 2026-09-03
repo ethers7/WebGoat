@@ -9,6 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.inform
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
@@ -54,15 +55,28 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   }
 
   @GetMapping(path = "/SpoofCookie/cleanup")
-  public void cleanup(HttpServletResponse response) {
+  public void cleanup(HttpServletRequest request, HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
+    // Same path as the cookie handed out on login, otherwise the browser keeps the original
+    // cookie; the lesson page now relies on this endpoint to reset the exercise because the
+    // cookie is HttpOnly and can no longer be cleared from JavaScript.
+    cookie.setPath("/WebGoat");
+    cookie.setHttpOnly(true);
+    // Match the transport the request came in on: over HTTPS the cookie must never be sent in
+    // cleartext, over plain HTTP a Secure cookie would be ignored and the lesson could not be
+    // reset.
+    if (request.isSecure()) {
+      cookie.setSecure(true);
+    }
     response.addCookie(cookie);
   }
 
   private AttackResult credentialsLoginFlow(
       String username, String password, HttpServletResponse response) {
     String lowerCasedUsername = username.toLowerCase();
+    // Non-production lesson fixtures: the credentials in the in-memory users map only
+    // unlock this cookie-spoofing exercise; nothing to rotate outside WebGoat.
     if (ATTACK_USERNAME.equals(lowerCasedUsername)
         && users.get(lowerCasedUsername).equals(password)) {
       return informationMessage(this).feedback("spoofcookie.cheating").build();
@@ -74,6 +88,9 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       Cookie newCookie = new Cookie(COOKIE_NAME, newCookieValue);
       newCookie.setPath("/WebGoat");
       newCookie.setSecure(true);
+      // The lesson stays solvable with an HttpOnly cookie: the encoded value is echoed in the
+      // assignment output below and can be forged with a proxy or the browser dev tools.
+      newCookie.setHttpOnly(true);
       response.addCookie(newCookie);
       return informationMessage(this)
           .feedback("spoofcookie.login")

@@ -12,14 +12,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -27,10 +31,10 @@ import org.springframework.ui.ModelMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -47,6 +51,11 @@ public class FileServer {
 
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
+  static final String INVALID_FILE_NAME = "Invalid file name";
+
+  /** Only the messages of an upload we can be redirected from are shown on the files page. */
+  private static final Set<String> UPLOAD_MESSAGES =
+      Set.of(UPLOAD_SUCCESSFUL, NOTHING_TO_UPLOAD, UPLOAD_TOO_LARGE, INVALID_FILE_NAME);
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -60,7 +69,7 @@ public class FileServer {
   @Value("${server.port}")
   private int port;
 
-  @RequestMapping(
+  @GetMapping(
       path = "/file-server-location",
       consumes = ALL_VALUE,
       produces = MediaType.TEXT_PLAIN_VALUE)
@@ -85,18 +94,45 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+    Path destinationFile;
+    try {
+      destinationFile = resolveUploadedFile(destinationDir, multipartFile.getOriginalFilename());
+    } catch (IOException e) {
+      log.warn("Rejected upload of {}: {}", username, e.getMessage());
+      return new ModelAndView(
+          new RedirectView("files", true),
+          new ModelMap().addAttribute("uploadSuccess", INVALID_FILE_NAME));
+    }
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", destinationFile);
 
     return new ModelAndView(
         new RedirectView("files", true),
         new ModelMap().addAttribute("uploadSuccess", UPLOAD_SUCCESSFUL));
+  }
+
+  /**
+   * Resolves the name of the uploaded file against the directory of the user. Only the file name
+   * part of the upload is used and the canonical location has to stay inside the directory of the
+   * user, so names containing a path, {@code ..} segments or an absolute path are rejected.
+   */
+  private static Path resolveUploadedFile(File destinationDir, String originalFilename)
+      throws IOException {
+    var baseDirectory = destinationDir.getCanonicalFile();
+    var fileName = FilenameUtils.getName(originalFilename);
+    if (!StringUtils.hasText(fileName) || !fileName.equals(originalFilename)) {
+      throw new IOException("Only plain file names without a path are allowed");
+    }
+    var uploadedFile = new File(baseDirectory, fileName).getCanonicalFile();
+    if (!uploadedFile.toPath().startsWith(baseDirectory.toPath())) {
+      throw new IOException("File name resolves outside of the directory of the user");
+    }
+    return uploadedFile.toPath();
   }
 
   @GetMapping(value = "/files")
@@ -111,6 +147,10 @@ public class FileServer {
     // FileUploadExceptionAdvice
     var uploadMessage = request.getParameter("uploadSuccess");
     if (StringUtils.hasText(uploadMessage)) {
+      if (!UPLOAD_MESSAGES.contains(uploadMessage)) {
+        log.debug("Rejected unknown upload message for {}", username);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown upload message");
+      }
       modelAndView.addObject("uploadSuccess", uploadMessage);
       modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
     }

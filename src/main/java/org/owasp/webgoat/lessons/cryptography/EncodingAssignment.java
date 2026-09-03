@@ -8,8 +8,9 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
+import java.util.regex.Pattern;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
@@ -22,6 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EncodingAssignment implements AssignmentEndpoint {
 
+  /**
+   * The user name is supplied by the request, so it is validated against the same form WebGoat
+   * accepts at registration before it is used to build the credential shown in this lesson.
+   */
+  private static final Pattern VALID_USERNAME = Pattern.compile("[a-zA-Z0-9_.@-]{1,64}");
+
+  private static final String BASIC_AUTH_SECRET = "basicAuthSecret";
+
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
   }
@@ -30,15 +41,14 @@ public class EncodingAssignment implements AssignmentEndpoint {
   @ResponseBody
   public String getBasicAuth(HttpServletRequest request) {
 
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    String username = request.getUserPrincipal().getName();
-    if (basicAuth == null) {
-      String password =
-          HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
-      basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+    String password = (String) request.getSession().getAttribute(BASIC_AUTH_SECRET);
+    if (password == null) {
+      // Only server generated state is stored in the session, never request supplied data.
+      int index = SECURE_RANDOM.nextInt(HashingAssignment.SECRETS.length);
+      password = HashingAssignment.SECRETS[index];
+      request.getSession().setAttribute(BASIC_AUTH_SECRET, password);
     }
-    return "Authorization: Basic ".concat(basicAuth);
+    return "Authorization: Basic ".concat(getBasicAuth(validatedUsername(request), password));
   }
 
   @PostMapping("/crypto/encoding/basic-auth")
@@ -47,14 +57,24 @@ public class EncodingAssignment implements AssignmentEndpoint {
       HttpServletRequest request,
       @RequestParam String answer_user,
       @RequestParam String answer_pwd) {
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    if (basicAuth != null
+    String password = (String) request.getSession().getAttribute(BASIC_AUTH_SECRET);
+    if (password != null
         && answer_user != null
         && answer_pwd != null
-        && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
+        && getBasicAuth(validatedUsername(request), password)
+            .equals(getBasicAuth(answer_user, answer_pwd))) {
       return success(this).feedback("crypto-encoding.success").build();
     } else {
       return failed(this).feedback("crypto-encoding.empty").build();
     }
+  }
+
+  private static String validatedUsername(HttpServletRequest request) {
+    var principal = request.getUserPrincipal();
+    String username = principal == null ? null : principal.getName();
+    if (username == null || !VALID_USERNAME.matcher(username).matches()) {
+      throw new IllegalArgumentException("Invalid user name");
+    }
+    return username;
   }
 }

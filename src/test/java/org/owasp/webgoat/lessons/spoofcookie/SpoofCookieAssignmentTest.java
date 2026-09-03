@@ -62,6 +62,7 @@ class SpoofCookieAssignmentTest extends LessonTest {
     result.andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
     result.andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
     result.andExpect(cookie().value(COOKIE_NAME, not(emptyString())));
+    result.andExpect(cookie().httpOnly(COOKIE_NAME, true));
   }
 
   @ParameterizedTest
@@ -155,7 +156,17 @@ class SpoofCookieAssignmentTest extends LessonTest {
         .perform(MockMvcRequestBuilders.get(ERASE_COOKIE_CONTEXT_PATH))
         .andExpect(status().isOk())
         .andExpect(cookie().maxAge(COOKIE_NAME, 0))
-        .andExpect(cookie().value(COOKIE_NAME, ""));
+        .andExpect(cookie().value(COOKIE_NAME, ""))
+        .andExpect(cookie().httpOnly(COOKIE_NAME, true));
+  }
+
+  @Test
+  @DisplayName("Erase authentication cookie over HTTPS marks the cookie as secure")
+  void eraseAuthenticationCookieOverHttpsIsSecure() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(ERASE_COOKIE_CONTEXT_PATH).secure(true))
+        .andExpect(status().isOk())
+        .andExpect(cookie().secure(COOKIE_NAME, true));
   }
 
   private static Stream<Arguments> providedCookieValues() {

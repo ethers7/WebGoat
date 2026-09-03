@@ -72,6 +72,8 @@ public class CryptoIntegrationTest extends IntegrationTest {
   }
 
   private void checkAssignment3() {
+    // Expected plaintext of the XOR-encoding exercise, i.e. the answer the student submits; it is
+    // not a credential and grants no access.
     String answer_1 = "databasepassword";
     Map<String, Object> params = new HashMap<>();
     params.clear();

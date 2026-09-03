@@ -45,8 +45,12 @@ public class SqlInjectionLesson5aTest extends LessonTest {
         .andExpect(jsonPath("$.output").doesNotExist());
   }
 
+  /**
+   * The account name is bound as a query parameter, so the always true condition is compared as
+   * data and no longer returns every row.
+   */
   @Test
-  public void sqlInjection() throws Exception {
+  public void sqlInjectionDoesNotSolveTheAssignment() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -54,13 +58,13 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("operator", "OR")
                 .param("injection", "'1' = '1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("You have succeed")))
-        .andExpect(jsonPath("$.output").exists());
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.5a.no.results"))));
   }
 
+  /** Unbalanced quotes are data now, they can no longer produce a malformed query. */
   @Test
-  public void sqlInjectionWrongShouldDisplayError() throws Exception {
+  public void sqlInjectionWithUnbalancedQuotesIsTreatedAsData() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -69,13 +73,12 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("injection", "'1' = '1'"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", containsString(messages.getMessage("assignment.not.solved"))))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.5a.no.results"))))
         .andExpect(
             jsonPath(
                 "$.output",
                 is(
-                    "malformed string: '1''<br> Your query was: SELECT * FROM user_data WHERE"
-                        + " first_name = 'John' and last_name = 'Smith' OR '1' = '1''")));
+                    "Your query was: SELECT * FROM user_data WHERE first_name = 'John' and"
+                        + " last_name = ?")));
   }
 }

@@ -20,7 +20,9 @@ define([
             options || (options = {});
             var data = (options.data || {});
             if(this.enabled != undefined) {
+            	// toggling the flag changes state on the server, so it has to be a POST
             	options.data = { enabled: !this.enabled };
+            	options.type = 'POST';
             }
             return Backbone.Collection.prototype.fetch.call(this, options);
 		},

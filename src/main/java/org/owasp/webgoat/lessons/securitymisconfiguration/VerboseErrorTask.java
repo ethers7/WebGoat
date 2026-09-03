@@ -39,7 +39,9 @@ public class VerboseErrorTask implements AssignmentEndpoint {
             + "\nENVIRONMENT=staging\n"
             + "DEBUG_MODE=true\n"
             + "DB_USER=staging_user\n"
-            + "DB_PASSWORD=staging_password123\n"
+            // Masked on purpose: the lesson only needs the API token below, so no password-like
+            // literal is kept in the source.
+            + "DB_PASSWORD=<masked>\n"
             + "SYSTEM_API_TOKEN="
             + LEAKED_TOKEN
             + "\n";

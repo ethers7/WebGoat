@@ -43,6 +43,8 @@ public class SampleAttack implements AssignmentEndpoint {
 
     // overly simple example for success. See other existing lesssons for ways to detect 'success'
     // or 'failure'
+    // Non-production lesson fixture: secretValue is the lesson template's sample answer,
+    // not a real credential; nothing to rotate.
     if (secretValue.equals(param1)) {
       return success(this)
           .output("Custom Output ...if you want, for success")

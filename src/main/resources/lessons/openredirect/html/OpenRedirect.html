@@ -128,7 +128,10 @@
         <span class="tiny-hint">Use strict allow lists, canonical host comparison, and server-side mapping of destination ids.</span>
       </form>
       <p>
-        <small>Also experiment with a real (unsafe) redirect: <code>/OpenRedirect/realRedirect?url=https://example.com</code></small>
+        <small>Also experiment with a real 302 redirect that is constrained to internal destinations:
+          <code>/OpenRedirect/realRedirect?url=/login</code>. An external target such as
+          <code>?url=https://example.com</code> is now rejected with HTTP 400 instead of leaving the
+          application.</small>
       </p>
       <div class="attack-feedback"></div>
       <div class="attack-output"></div>
