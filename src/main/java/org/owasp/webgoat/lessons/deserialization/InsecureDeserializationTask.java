@@ -9,9 +9,12 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
 import java.util.Base64;
+import java.util.Set;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -40,7 +43,8 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
     b64token = token.replace('-', '+').replace('_', '/');
 
     try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+        new LessonObjectInputStream(
+            new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
@@ -66,5 +70,36 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
       return failed(this).build();
     }
     return success(this).build();
+  }
+
+  private static final class LessonObjectInputStream extends ObjectInputStream {
+
+    // Only what this lesson actually transmits: the task payload, its String fields, its
+    // LocalDateTime field and the java.time.Ser proxy that LocalDateTime serializes through.
+    private static final Set<String> ALLOWED_CLASSES =
+        Set.of(
+            "org.dummy.insecure.framework.VulnerableTaskHolder",
+            "java.lang.String",
+            "java.time.LocalDateTime",
+            "java.time.Ser");
+
+    private LessonObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc)
+        throws IOException, ClassNotFoundException {
+      if (!ALLOWED_CLASSES.contains(desc.getName())) {
+        throw new InvalidClassException(desc.getName(), "class not allowed for deserialization");
+      }
+      return super.resolveClass(desc);
+    }
+
+    @Override
+    protected Class<?> resolveProxyClass(String[] interfaces)
+        throws IOException, ClassNotFoundException {
+      throw new InvalidClassException("proxy classes are not allowed for deserialization");
+    }
   }
 }
