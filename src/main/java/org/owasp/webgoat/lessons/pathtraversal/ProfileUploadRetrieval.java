@@ -61,7 +61,7 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        FileCopyUtils.copy(is, new FileOutputStream(resolveCatPicture(i + ".jpg")));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
@@ -74,6 +74,19 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     } catch (IOException e) {
       log.error("Unable to write secret in: {}", secretDirectory, e);
     }
+  }
+
+  /**
+   * Resolves a picture name against the cat pictures directory and rejects names whose canonical
+   * location escapes that directory (for example {@code ..} segments or an absolute path).
+   */
+  private File resolveCatPicture(String pictureName) throws IOException {
+    var baseDirectory = catPicturesDirectory.getCanonicalFile();
+    var picture = new File(baseDirectory, pictureName).getCanonicalFile();
+    if (!picture.toPath().startsWith(baseDirectory.toPath())) {
+      throw new IOException("Picture name outside of the cat pictures directory: " + pictureName);
+    }
+    return picture;
   }
 
   @PostMapping("/PathTraversal/random")
