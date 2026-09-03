@@ -40,9 +40,9 @@ import org.springframework.web.servlet.ModelAndView;
 })
 public class ResetLinkAssignment implements AssignmentEndpoint {
 
+  // Thymeleaf view path template, no credential material: it is only formatted with the constant
+  // view names used below.
   private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
-  static final String PASSWORD_TOM_9 =
-      "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
@@ -67,8 +67,10 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   public AttackResult login(
       @RequestParam String password, @RequestParam String email, @CurrentUsername String username) {
     if (TOM_EMAIL.equals(email)) {
-      String passwordTom = usersToTomPassword.getOrDefault(username, PASSWORD_TOM_9);
-      if (passwordTom.equals(PASSWORD_TOM_9)) {
+      // No default password for Tom is kept in the source; his password only exists once the
+      // student has reset it through the reset link.
+      String passwordTom = usersToTomPassword.get(username);
+      if (passwordTom == null) {
         return failed(this).feedback("login_failed").build();
       } else if (passwordTom.equals(password)) {
         return success(this).build();

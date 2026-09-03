@@ -52,6 +52,8 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "<input type=\"submit\" value=\"assignment 7\"/>\n"
           + "</form></body></html>";
 
+  // Registration form fixture for the CSRF lesson; the form values are dummy test input for a
+  // throw-away lesson account, not credentials.
   private static final String trickHTML8 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"username\" value=\"csrf-USERNAME\"/>\n"
