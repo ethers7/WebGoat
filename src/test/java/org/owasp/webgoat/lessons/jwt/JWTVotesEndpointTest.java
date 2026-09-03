@@ -104,6 +104,18 @@ public class JWTVotesEndpointTest extends LessonTest {
   }
 
   @Test
+  public void tokenCookieShouldBeSecureWhenServedOverHttps() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/JWT/votings/login")
+                .secure(true)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("user", "Tom"))
+        .andExpect(status().isOk())
+        .andExpect(cookie().secure("access_token", true));
+  }
+
+  @Test
   public void guestShouldNotSeeNumberOfVotes() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/JWT/votings").cookie(new Cookie("access_token", "")))

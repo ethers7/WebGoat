@@ -9,6 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.inform
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
@@ -54,9 +55,15 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   }
 
   @GetMapping(path = "/SpoofCookie/cleanup")
-  public void cleanup(HttpServletResponse response) {
+  public void cleanup(HttpServletRequest request, HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
+    // Match the transport the request came in on: over HTTPS the cookie must never be sent in
+    // cleartext, over plain HTTP a Secure cookie would be ignored and the lesson could not be
+    // reset.
+    if (request.isSecure()) {
+      cookie.setSecure(true);
+    }
     response.addCookie(cookie);
   }
 

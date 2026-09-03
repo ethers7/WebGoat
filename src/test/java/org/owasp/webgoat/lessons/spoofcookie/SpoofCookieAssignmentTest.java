@@ -158,6 +158,15 @@ class SpoofCookieAssignmentTest extends LessonTest {
         .andExpect(cookie().value(COOKIE_NAME, ""));
   }
 
+  @Test
+  @DisplayName("Erase authentication cookie over HTTPS marks the cookie as secure")
+  void eraseAuthenticationCookieOverHttpsIsSecure() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(ERASE_COOKIE_CONTEXT_PATH).secure(true))
+        .andExpect(status().isOk())
+        .andExpect(cookie().secure(COOKIE_NAME, true));
+  }
+
   private static Stream<Arguments> providedCookieValues() {
     return Stream.of(
         Arguments.of("NjI2MTcwNGI3YTQxNGE1OTUNzQ2ZDZmNzQ="),
