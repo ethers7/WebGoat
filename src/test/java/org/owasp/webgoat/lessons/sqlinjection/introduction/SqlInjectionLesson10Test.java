@@ -4,6 +4,7 @@
  */
 package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,35 +15,35 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class SqlInjectionLesson10Test extends LessonTest {
 
-  private String completedError = "JSON path \"lessonCompleted\"";
-
   @Test
   public void tableExistsIsFailure() throws Exception {
-    try {
-      mockMvc
-          .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("lessonCompleted", is(false)))
-          .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
-    } catch (AssertionError e) {
-      if (!e.getMessage().contains(completedError)) throw e;
-
-      mockMvc
-          .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("lessonCompleted", is(true)))
-          .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.success"))));
-    }
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
   }
 
+  /**
+   * The search term is bound as a LIKE parameter, so the chained DROP TABLE is only compared as
+   * text. The lesson keeps working and the access_log table survives, which the follow up search
+   * below proves: a dropped table would raise a SQL error and report the lesson as solved.
+   */
   @Test
-  public void tableMissingIsSuccess() throws Exception {
+  public void dropTablePayloadNoLongerRemovesTheTable() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack10")
                 .param("action_string", "%'; DROP TABLE access_log;--"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.success"))));
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))))
+        .andExpect(jsonPath("$.output", containsString("<table>")));
   }
 }

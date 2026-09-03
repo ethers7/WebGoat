@@ -8,6 +8,12 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
+/**
+ * The assignments 5a, 5b, 8, 9 and 10 run parameterized statements, so the payloads below can no
+ * longer inject SQL. They are kept as regression cases and are expected to be rejected, which is
+ * why those assignments are asserted as not solved and why the lesson overview is no longer
+ * expected to be complete.
+ */
 public class SqlInjectionLessonIntegrationTest extends IntegrationTest {
 
   public static final String sql_2 = "select department from employees where last_name='Franco'";
@@ -56,27 +62,25 @@ public class SqlInjectionLessonIntegrationTest extends IntegrationTest {
     params.put("operator", sql_9_operator);
     params.put("account", sql_9_account);
     params.put("injection", sql_9_injection);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, false);
 
     params.clear();
     params.put("login_count", sql_10_login_count);
     params.put("userid", sql_10_userid);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, false);
 
     params.clear();
     params.put("name", sql_11_a);
     params.put("auth_tan", sql_11_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, false);
 
     params.clear();
     params.put("name", sql_12_a);
     params.put("auth_tan", sql_12_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, false);
 
     params.clear();
     params.put("action_string", sql_13);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, true);
-
-    checkResults("SqlInjection");
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, false);
   }
 }
