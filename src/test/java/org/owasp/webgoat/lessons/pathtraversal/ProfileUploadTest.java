@@ -4,10 +4,12 @@
  */
 package org.owasp.webgoat.lessons.pathtraversal;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.util.Base64;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,21 +63,23 @@ class ProfileUploadTest extends LessonTest {
 
   @Test
   @WithWebGoatUser
-  void shouldNotOverrideExistingFile() throws Exception {
+  void shouldNotWriteOutsideOfTheDirectoryOfTheUser() throws Exception {
     var profilePicture =
         new MockMultipartFile("uploadedFile", "picture.jpg", "text/plain", "an image".getBytes());
     mockMvc
         .perform(
             MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
                 .file(profilePicture)
-                .param("fullName", ".." + File.separator + "test"))
-        .andExpect(
-            jsonPath(
-                "$.output",
-                CoreMatchers.anyOf(
-                    CoreMatchers.containsString("Is a directory"),
-                    CoreMatchers.containsString("..\\\\" + "test"))))
+                .param("fullName", ".." + File.separator + "picture.jpg"))
         .andExpect(status().is(200));
+
+    // The traversal is contained, the file is written inside the directory of the user itself and
+    // is therefore served as the profile picture of that user. Before the fix the file was written
+    // one directory up and the default image was returned here.
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/PathTraversal/profile-picture"))
+        .andExpect(status().is(200))
+        .andExpect(content().bytes(Base64.getEncoder().encode("an image".getBytes())));
   }
 
   @Test
