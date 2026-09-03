@@ -56,6 +56,8 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   @GetMapping(path = "/SpoofCookie/cleanup")
   public void cleanup(HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
+    cookie.setPath("/WebGoat");
+    cookie.setSecure(true);
     cookie.setMaxAge(0);
     response.addCookie(cookie);
   }
