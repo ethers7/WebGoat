@@ -72,6 +72,9 @@ public class CryptoIntegrationTest extends IntegrationTest {
   }
 
   private void checkAssignment3() {
+    // Not a credential: the expected plaintext answer for the XOR encoding lesson
+    // (see XOREncodingAssignment), asserted by this test. It grants no access and
+    // there is nothing to rotate.
     String answer_1 = "databasepassword";
     Map<String, Object> params = new HashMap<>();
     params.clear();

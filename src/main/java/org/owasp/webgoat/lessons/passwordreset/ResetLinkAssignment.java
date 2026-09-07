@@ -41,6 +41,9 @@ import org.springframework.web.servlet.ModelAndView;
 public class ResetLinkAssignment implements AssignmentEndpoint {
 
   private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
+  // Not a credential: a sentinel meaning "Tom's password was never reset". A stored
+  // password equal to this value makes the lesson login fail, so it grants no access.
+  // Nothing to rotate; the value is compared by the assignment grading below.
   static final String PASSWORD_TOM_9 =
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
