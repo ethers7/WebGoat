@@ -39,6 +39,8 @@ public class SqlInjectionLesson6b implements AssignmentEndpoint {
   }
 
   protected String getPassword() {
+    // Not a credential: the fallback is the name of the user whose password this lesson asks for,
+    // and it is replaced by the value read from the database below.
     String password = "dave";
     try (Connection connection = dataSource.getConnection()) {
       // The user name is bound as a parameter, so it is always treated as a value.

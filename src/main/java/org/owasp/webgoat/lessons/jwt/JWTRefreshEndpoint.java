@@ -44,7 +44,14 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
+  // Not a credential: the login password of this lesson's fake shop, which the lesson hands to
+  // every learner in its own front end (src/main/resources/lessons/jwt/js/jwt-refresh.js).
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+
+  // Signing key of the tokens minted by this lesson only, and it has to keep this exact value: the
+  // lesson ships an access log with a token for Tom (lessons/jwt/images/logs.txt) which the learner
+  // replays against /JWT/refresh/newToken, and that token verifies under this key alone. It signs
+  // nothing outside this lesson, so there is no credential here to move into configuration.
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 

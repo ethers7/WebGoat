@@ -35,6 +35,9 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
+  // Not a credential: the reset link of this challenge, which the learner is meant to recover from
+  // the git repository the challenge serves itself (lessons/challenges/challenge7/git.zip). It
+  // guards only the challenge flag below, so there is nothing to move into configuration.
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
   private static final String TEMPLATE =
