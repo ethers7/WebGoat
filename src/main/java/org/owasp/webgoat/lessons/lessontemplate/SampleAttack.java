@@ -43,6 +43,8 @@ public class SampleAttack implements AssignmentEndpoint {
 
     // overly simple example for success. See other existing lesssons for ways to detect 'success'
     // or 'failure'
+    // Not a credential: the sample value of this lesson template, documented in
+    // documentation/lesson-template-attack.adoc as the answer to type in. Nothing to rotate.
     if (secretValue.equals(param1)) {
       return success(this)
           .output("Custom Output ...if you want, for success")

@@ -54,6 +54,8 @@ public class ActuatorExposureTask implements AssignmentEndpoint {
       value = "/SecurityMisconfiguration/task3",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public AttackResult submitApiKey(@RequestParam("apiKey") String apiKey) {
+    // Not a credential: this fake key is handed out by the lesson's own mock actuator endpoint
+    // above, because finding it there is the exercise. It opens nothing and has nothing to rotate.
     if (LEAKED_API_KEY.equals(apiKey)) {
       return success(this)
           .feedback("securitymisconfiguration.task3.success")

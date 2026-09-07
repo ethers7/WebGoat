@@ -9,6 +9,8 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import static org.springframework.util.StringUtils.hasText;
 
 import com.google.common.collect.Maps;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +75,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       String passwordTom = usersToTomPassword.getOrDefault(username, PASSWORD_TOM_9);
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
-      } else if (passwordTom.equals(password)) {
+      } else if (matchesPassword(passwordTom, password)) {
         return success(this).build();
       }
     }
@@ -118,6 +120,17 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
     }
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
+  }
+
+  // Compares the password which was set through the reset link with the submitted one in constant
+  // time, so the response time of this login does not leak the stored password.
+  private static boolean matchesPassword(String storedPassword, String submittedPassword) {
+    if (storedPassword == null || submittedPassword == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        storedPassword.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   private boolean checkIfLinkIsFromTom(String resetLinkFromForm, String username) {

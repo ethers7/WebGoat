@@ -8,6 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -71,13 +72,25 @@ public class HashingAssignment implements AssignmentEndpoint {
     String sha256Secret = (String) request.getSession().getAttribute("sha256Secret");
 
     if (answer_pwd1 != null && answer_pwd2 != null) {
-      if (answer_pwd1.equals(md5Secret) && answer_pwd2.equals(sha256Secret)) {
+      boolean md5Solved = matchesSecret(md5Secret, answer_pwd1);
+      boolean sha256Solved = matchesSecret(sha256Secret, answer_pwd2);
+      if (md5Solved && sha256Solved) {
         return success(this).feedback("crypto-hashing.success").build();
-      } else if (answer_pwd1.equals(md5Secret) || answer_pwd2.equals(sha256Secret)) {
+      } else if (md5Solved || sha256Solved) {
         return failed(this).feedback("crypto-hashing.oneok").build();
       }
     }
     return failed(this).feedback("crypto-hashing.empty").build();
+  }
+
+  // Compares a submitted answer with the secret kept in the session in constant time, so the
+  // response time of this endpoint does not leak the secret which belongs to the hash.
+  private static boolean matchesSecret(String secret, String answer) {
+    if (secret == null || answer == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        secret.getBytes(StandardCharsets.UTF_8), answer.getBytes(StandardCharsets.UTF_8));
   }
 
   public static String getHash(String secret, String algorithm) throws NoSuchAlgorithmException {

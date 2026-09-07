@@ -14,6 +14,8 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,10 +60,21 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
     String user = (String) json.get("user");
     String password = (String) json.get("password");
 
-    if ("Jerry".equalsIgnoreCase(user) && PASSWORD.equals(password)) {
+    if ("Jerry".equalsIgnoreCase(user) && matchesPassword(password)) {
       return ok(createNewTokens(user));
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+  }
+
+  // Compares the submitted password with the expected one in constant time, so the response time
+  // of this login endpoint does not leak the password of the account used to mint tokens.
+  private static boolean matchesPassword(String submittedPassword) {
+    if (submittedPassword == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        PASSWORD.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   private Map<String, Object> createNewTokens(String user) {

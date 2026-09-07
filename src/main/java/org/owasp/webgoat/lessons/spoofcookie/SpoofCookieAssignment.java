@@ -11,6 +11,8 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -71,12 +73,12 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       String username, String password, HttpServletResponse response) {
     String lowerCasedUsername = username.toLowerCase();
     if (ATTACK_USERNAME.equals(lowerCasedUsername)
-        && users.get(lowerCasedUsername).equals(password)) {
+        && matchesPassword(users.get(lowerCasedUsername), password)) {
       return informationMessage(this).feedback("spoofcookie.cheating").build();
     }
 
     String authPassword = users.getOrDefault(lowerCasedUsername, "");
-    if (!authPassword.isBlank() && authPassword.equals(password)) {
+    if (!authPassword.isBlank() && matchesPassword(authPassword, password)) {
       String newCookieValue = EncDec.encode(lowerCasedUsername);
       Cookie newCookie = new Cookie(COOKIE_NAME, newCookieValue);
       newCookie.setPath("/WebGoat");
@@ -89,6 +91,18 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
     }
 
     return informationMessage(this).feedback("spoofcookie.wrong-login").build();
+  }
+
+  // Compares a stored password with the submitted one in constant time. A plain equals returns
+  // as soon as the first byte differs, so the response time of this login flow can leak the
+  // stored password character by character.
+  private static boolean matchesPassword(String storedPassword, String submittedPassword) {
+    if (storedPassword == null || submittedPassword == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        storedPassword.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   private AttackResult cookieLoginFlow(String cookieValue) {
