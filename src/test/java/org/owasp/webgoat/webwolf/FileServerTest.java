@@ -133,6 +133,14 @@ class FileServerTest {
     mockMvc
         .perform(
             get("/files")
+                .param("uploadSuccess", FileServer.NOTHING_TO_UPLOAD)
+                .principal(AUTHENTICATION))
+        .andExpect(model().attribute("uploadSuccess", FileServer.NOTHING_TO_UPLOAD))
+        .andExpect(model().attribute("uploadFailed", true));
+
+    mockMvc
+        .perform(
+            get("/files")
                 .param("uploadSuccess", FileServer.UPLOAD_SUCCESSFUL)
                 .principal(AUTHENTICATION))
         .andExpect(model().attribute("uploadFailed", false));
@@ -140,6 +148,19 @@ class FileServerTest {
     // no message means no alert on the files page
     mockMvc
         .perform(get("/files").principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+  }
+
+  @Test
+  @DisplayName("A message the file server never sends is not shown on the files page")
+  void shouldIgnoreUploadMessageWhichIsNotOurOwn() throws Exception {
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "Session expired, please enter your password again")
+                .principal(AUTHENTICATION))
+        .andExpect(status().isOk())
+        .andExpect(view().name("files"))
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 

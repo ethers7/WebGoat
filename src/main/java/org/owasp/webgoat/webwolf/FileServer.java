@@ -18,6 +18,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -49,6 +50,10 @@ public class FileServer {
 
   static final String NOTHING_TO_UPLOAD = "Nothing to upload";
   static final String UPLOAD_TOO_LARGE = "File is too large to upload";
+
+  /** The complete set of messages the file server itself sends to the files page. */
+  private static final Set<String> UPLOAD_MESSAGES =
+      Set.of(UPLOAD_SUCCESSFUL, NOTHING_TO_UPLOAD, UPLOAD_TOO_LARGE);
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -137,11 +142,17 @@ public class FileServer {
     ModelAndView modelAndView = new ModelAndView();
     modelAndView.setViewName("files");
     // the message of the upload we are redirected from, see importFile and
-    // FileUploadExceptionAdvice
+    // FileUploadExceptionAdvice. The parameter travels through the browser, so it is only shown
+    // when it is one of the messages we send ourselves; any other value is dropped instead of
+    // being presented to the user as a message of this application.
     var uploadMessage = request.getParameter("uploadSuccess");
     if (StringUtils.hasText(uploadMessage)) {
-      modelAndView.addObject("uploadSuccess", uploadMessage);
-      modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
+      if (UPLOAD_MESSAGES.contains(uploadMessage)) {
+        modelAndView.addObject("uploadSuccess", uploadMessage);
+        modelAndView.addObject("uploadFailed", !UPLOAD_SUCCESSFUL.equals(uploadMessage));
+      } else {
+        log.debug("Ignoring an upload message which is not sent by the file server");
+      }
     }
 
     record UploadedFile(String name, String size, String link, String creationTime) {}
