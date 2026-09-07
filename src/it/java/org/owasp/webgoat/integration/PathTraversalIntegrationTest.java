@@ -147,6 +147,11 @@ class PathTraversalIT extends IntegrationTest {
             .extract()
             .path("lessonCompleted"),
         CoreMatchers.is(true));
+
+    // The zip slip attempt is what solves the assignment, the entry itself is never extracted
+    // outside the temporary extraction directory
+    MatcherAssert.assertThat(
+        new File(webGoatDirectory, "image.jpg").exists(), CoreMatchers.is(false));
   }
 
   @AfterEach

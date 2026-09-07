@@ -4,21 +4,27 @@
  */
 package org.owasp.webgoat.lessons.pathtraversal;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.nio.file.Files;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.WithWebGoatUser;
 import org.owasp.webgoat.container.plugins.LessonTest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @WithWebGoatUser
 class ProfileUploadTest extends LessonTest {
+
+  @Value("${webgoat.server.directory}")
+  private String webGoatServerDirectory;
 
   @BeforeEach
   void setup() {
@@ -39,6 +45,28 @@ class ProfileUploadTest extends LessonTest {
         .andExpect(status().is(200))
         .andExpect(jsonPath("$.assignment", CoreMatchers.equalTo("ProfileUpload")))
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
+  }
+
+  @Test
+  void traversalAttemptShouldNotWriteOutsideTheUploadDirectory() throws Exception {
+    var traversedFile = new File(webGoatServerDirectory, "PathTraversal/John Doe");
+    Files.deleteIfExists(traversedFile.toPath());
+
+    var profilePicture =
+        new MockMultipartFile(
+            "uploadedFile", "../picture.jpg", "text/plain", "an image".getBytes());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart("/PathTraversal/profile-upload")
+                .file(profilePicture)
+                .param("fullName", "../John Doe"))
+        .andExpect(status().is(200))
+        .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(true)));
+
+    // The traversal attempt is what solves the assignment, the file itself is never written
+    // outside the upload directory of the user
+    assertThat(traversedFile).doesNotExist();
   }
 
   @Test

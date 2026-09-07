@@ -14,12 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.owasp.webgoat.container.CurrentUsername;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -64,31 +64,41 @@ public class ProfileZipSlip extends ProfileUploadBase {
 
   @SneakyThrows
   private AttackResult processZipUpload(MultipartFile file, String username) {
-    var tmpZipDirectory = Files.createTempDirectory(username);
+    // Only the last part of the (authenticated) user name is used as prefix, the temporary
+    // extraction directory can therefore never be steered outside the temp directory.
+    var tmpZipDirectory = Files.createTempDirectory(FilenameUtils.getName(username));
+    var extractDirectory = tmpZipDirectory.toFile();
     cleanupAndCreateDirectoryForUser(username);
-    var currentImage = getProfilePictureAsBase64(username);
 
     try {
-      var uploadedZipFile = tmpZipDirectory.resolve(file.getOriginalFilename());
-      FileCopyUtils.copy(file.getBytes(), uploadedZipFile.toFile());
+      var uploadedZipFile = resolveWithin(extractDirectory, file.getOriginalFilename());
+      FileCopyUtils.copy(file.getBytes(), uploadedZipFile);
 
-      ZipFile zip = new ZipFile(uploadedZipFile.toFile());
-      Enumeration<? extends ZipEntry> entries = zip.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
-        InputStream is = zip.getInputStream(e);
-        Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      var zipSlipAttempted = false;
+      try (ZipFile zip = new ZipFile(uploadedZipFile)) {
+        Enumeration<? extends ZipEntry> entries = zip.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry e = entries.nextElement();
+          File f = resolveCanonical(extractDirectory, e.getName());
+          if (!isWithin(extractDirectory, f)) {
+            // Zip slip: the entry points outside the extraction directory, so it is not written.
+            zipSlipAttempted = true;
+            continue;
+          }
+          try (InputStream is = zip.getInputStream(e)) {
+            Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+          }
+        }
       }
 
-      return isSolved(currentImage, getProfilePictureAsBase64(username));
+      return isSolved(zipSlipAttempted);
     } catch (IOException e) {
       return failed(this).output(e.getMessage()).build();
     }
   }
 
-  private AttackResult isSolved(byte[] currentImage, byte[] newImage) {
-    if (Arrays.equals(currentImage, newImage)) {
+  private AttackResult isSolved(boolean zipSlipAttempted) {
+    if (!zipSlipAttempted) {
       return failed(this).output("path-traversal-zip-slip.extracted").build();
     }
     return success(this).output("path-traversal-zip-slip.extracted").build();
