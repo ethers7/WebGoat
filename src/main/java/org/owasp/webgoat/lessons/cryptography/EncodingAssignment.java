@@ -12,8 +12,8 @@ import jakarta.servlet.http.HttpSession;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.Principal;
+import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
 import java.util.regex.Pattern;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -36,6 +36,10 @@ public class EncodingAssignment implements AssignmentEndpoint {
   // accepted, which keeps separators (":"), whitespace and control characters out of the
   // credentials of this lesson.
   private static final Pattern VALID_USERNAME = Pattern.compile("[A-Za-z0-9_.@+-]{1,128}");
+
+  // The password of the Basic authentication header the learner has to decode is picked with a
+  // CSPRNG, so it cannot be predicted from the values handed out to other sessions.
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
@@ -86,7 +90,7 @@ public class EncodingAssignment implements AssignmentEndpoint {
       return secret;
     }
     String generated =
-        HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
+        HashingAssignment.SECRETS[SECURE_RANDOM.nextInt(HashingAssignment.SECRETS.length)];
     session.setAttribute(BASIC_AUTH_SECRET, generated);
     return generated;
   }
