@@ -14,35 +14,24 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class SqlInjectionLesson10Test extends LessonTest {
 
-  private String completedError = "JSON path \"lessonCompleted\"";
-
   @Test
   public void tableExistsIsFailure() throws Exception {
-    try {
-      mockMvc
-          .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("lessonCompleted", is(false)))
-          .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
-    } catch (AssertionError e) {
-      if (!e.getMessage().contains(completedError)) throw e;
-
-      mockMvc
-          .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("lessonCompleted", is(true)))
-          .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.success"))));
-    }
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/SqlInjection/attack10").param("action_string", ""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
   }
 
   @Test
-  public void tableMissingIsSuccess() throws Exception {
+  public void dropTableInjectionIsTreatedAsSearchTerm() throws Exception {
+    // The search term is bound as a parameter, so the table can no longer be dropped.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/attack10")
                 .param("action_string", "%'; DROP TABLE access_log;--"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.success"))));
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.10.entries"))));
   }
 }

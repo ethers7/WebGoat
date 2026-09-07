@@ -46,7 +46,8 @@ public class SqlInjectionLesson5aTest extends LessonTest {
   }
 
   @Test
-  public void sqlInjection() throws Exception {
+  public void sqlInjectionIsTreatedAsALastName() throws Exception {
+    // The last name is bound as a parameter, so the injection only matches a literal last name.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -54,13 +55,19 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("operator", "OR")
                 .param("injection", "'1' = '1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("You have succeed")))
-        .andExpect(jsonPath("$.output").exists());
+        .andExpect(jsonPath("lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.5a.no.results"))))
+        .andExpect(
+            jsonPath(
+                "$.output",
+                is(
+                    "Your query was: SELECT * FROM user_data WHERE first_name = 'John' and"
+                        + " last_name = ?")));
   }
 
   @Test
-  public void sqlInjectionWrongShouldDisplayError() throws Exception {
+  public void malformedInjectionNoLongerBreaksTheQuery() throws Exception {
+    // An unbalanced quote used to make the query invalid, now it is part of the bound value.
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlInjection/assignment5a")
@@ -69,13 +76,12 @@ public class SqlInjectionLesson5aTest extends LessonTest {
                 .param("injection", "'1' = '1'"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", containsString(messages.getMessage("assignment.not.solved"))))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.5a.no.results"))))
         .andExpect(
             jsonPath(
                 "$.output",
                 is(
-                    "malformed string: '1''<br> Your query was: SELECT * FROM user_data WHERE"
-                        + " first_name = 'John' and last_name = 'Smith' OR '1' = '1''")));
+                    "Your query was: SELECT * FROM user_data WHERE first_name = 'John' and"
+                        + " last_name = ?")));
   }
 }

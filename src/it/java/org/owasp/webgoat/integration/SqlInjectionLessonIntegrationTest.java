@@ -52,31 +52,31 @@ public class SqlInjectionLessonIntegrationTest extends IntegrationTest {
     params.put("query", sql_5);
       checkAssignment(webGoatUrlConfig.url("SqlInjection/attack5"), params, true);
 
+    // The assignments below are backed by prepared statements, so the classic injections are
+    // matched as literal values and no longer solve the assignment.
     params.clear();
     params.put("operator", sql_9_operator);
     params.put("account", sql_9_account);
     params.put("injection", sql_9_injection);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5a"), params, false);
 
     params.clear();
     params.put("login_count", sql_10_login_count);
     params.put("userid", sql_10_userid);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/assignment5b"), params, false);
 
     params.clear();
     params.put("name", sql_11_a);
     params.put("auth_tan", sql_11_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack8"), params, false);
 
     params.clear();
     params.put("name", sql_12_a);
     params.put("auth_tan", sql_12_b);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, true);
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack9"), params, false);
 
     params.clear();
     params.put("action_string", sql_13);
-      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, true);
-
-    checkResults("SqlInjection");
+      checkAssignment(webGoatUrlConfig.url("SqlInjection/attack10"), params, false);
   }
 }
