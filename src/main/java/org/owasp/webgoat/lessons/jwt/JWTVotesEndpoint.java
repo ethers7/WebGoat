@@ -120,6 +120,9 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
               .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
               .compact();
       Cookie cookie = new Cookie("access_token", token);
+      // The voting page (lessons/jwt/js/jwt-voting.js) never reads this cookie from script; the
+      // browser attaches it to the JWT/votings calls automatically, so it can be HttpOnly.
+      cookie.setHttpOnly(true);
       // Only send the token cookie over HTTPS. WebGoat can also be started on plain HTTP
       // (server.ssl.enabled=false), where browsers reject a Secure cookie, so the flag follows
       // the transport of the current request instead of being hardcoded.
@@ -131,6 +134,8 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     } else {
       Cookie cookie = new Cookie("access_token", "");
+      // Same as above: not read from script, so keep it out of reach of JavaScript.
+      cookie.setHttpOnly(true);
       // Same as above: Secure is set only when the request itself is served over HTTPS.
       if (request.isSecure()) {
         cookie.setSecure(true);

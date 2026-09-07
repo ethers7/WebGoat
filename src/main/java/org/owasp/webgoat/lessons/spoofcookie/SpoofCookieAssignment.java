@@ -60,6 +60,12 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   public void cleanup(HttpServletRequest request, HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
+    // Must repeat the path the cookie was issued with, otherwise the browser stores a second
+    // cookie for /SpoofCookie instead of expiring the one on /WebGoat.
+    cookie.setPath("/WebGoat");
+    // The cookie is HttpOnly (see credentialsLoginFlow), so expiring it has to happen here on the
+    // server; the lesson page calls this endpoint from its "Delete cookie" link.
+    cookie.setHttpOnly(true);
     // Mirror the transport of the current request: WebGoat can be served over plain HTTP
     // (server.ssl.enabled=false), where a Secure cookie is rejected and the cookie would never
     // be erased, so the flag is only set for HTTPS requests.
@@ -83,6 +89,10 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       Cookie newCookie = new Cookie(COOKIE_NAME, newCookieValue);
       newCookie.setPath("/WebGoat");
       newCookie.setSecure(true);
+      // Hide the cookie from JavaScript. The lesson still shows its value in the output below and
+      // the attack is performed by sending a forged cookie in a request, which HttpOnly does not
+      // prevent; the lesson page no longer reads document.cookie (see lessons/spoofcookie/js).
+      newCookie.setHttpOnly(true);
       response.addCookie(newCookie);
       return informationMessage(this)
           .feedback("spoofcookie.login")

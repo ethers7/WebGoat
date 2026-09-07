@@ -67,6 +67,9 @@ public class HijackSessionAssignment implements AssignmentEndpoint {
     Cookie cookie = new Cookie(COOKIE_NAME, cookieValue);
     cookie.setPath("/WebGoat");
     cookie.setSecure(true);
+    // No lesson script reads this cookie, so it can be hidden from JavaScript. The lesson is
+    // solved by observing/forging the cookie in HTTP requests, which HttpOnly does not affect.
+    cookie.setHttpOnly(true);
     response.addCookie(cookie);
   }
 }

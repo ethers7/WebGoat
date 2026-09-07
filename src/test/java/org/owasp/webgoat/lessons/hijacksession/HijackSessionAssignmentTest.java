@@ -63,6 +63,7 @@ class HijackSessionAssignmentTest extends LessonTest {
                 .param("password", "webgoat"));
 
     result.andExpect(cookie().value(COOKIE_NAME, not(emptyString())));
+    result.andExpect(cookie().httpOnly(COOKIE_NAME, true));
     result.andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 }
