@@ -9,9 +9,10 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import jakarta.annotation.PostConstruct;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Pattern;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -29,6 +30,23 @@ import org.springframework.web.bind.annotation.RestController;
       "SqlStringInjectionHint5-4"
     })
 public class SqlInjectionLesson5 implements AssignmentEndpoint {
+
+  // A submitted statement is only executed when it grants an allow listed privilege on the table
+  // of this assignment to the user of this assignment. A privilege, a table and a grantee are
+  // identifiers which cannot be bound as parameters, so they are resolved with the allow lists.
+  private static final Pattern GRANT_STATEMENT =
+      Pattern.compile(
+          "(?i)\\s*grant\\s+(?<privilege>\\w+)\\s+on\\s+(?<table>\\w+)\\s+to\\s+"
+              + "(?<grantee>\\w+)\\s*;?\\s*");
+
+  private static final Set<String> PRIVILEGES =
+      Set.of("select", "insert", "update", "delete", "references", "trigger", "all");
+
+  private static final Set<String> TABLES = Set.of("grant_rights");
+
+  private static final Set<String> GRANTEES = Set.of("unauthorized_user");
+
+  private static final String REJECTED = "Only a GRANT on grant_rights is executed.";
 
   private final LessonDataSource dataSource;
 
@@ -58,21 +76,32 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String query) {
+    var matcher = GRANT_STATEMENT.matcher(query);
+    if (!matcher.matches()) {
+      return failed(this).output(REJECTED).build();
+    }
+    var privilege = matcher.group("privilege").toLowerCase(Locale.ROOT);
+    var table = matcher.group("table").toLowerCase(Locale.ROOT);
+    var grantee = matcher.group("grantee").toLowerCase(Locale.ROOT);
+    var allowed =
+        PRIVILEGES.contains(privilege) && TABLES.contains(table) && GRANTEES.contains(grantee);
+    if (!allowed) {
+      return failed(this).output(REJECTED).build();
+    }
+    // Only allow listed keywords and identifiers end up in the statement below.
+    var safeQuery = "GRANT %s ON %s TO %s".formatted(privilege, table, grantee);
+
     try (Connection connection = dataSource.getConnection()) {
-      try (Statement statement =
-          connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query);
-        if (checkSolution(connection)) {
-          return success(this).build();
-        }
-        return failed(this).output("Your query was: " + query).build();
+      try (var statement = connection.prepareStatement(safeQuery)) {
+        statement.execute();
       }
+      if (checkSolution(connection)) {
+        return success(this).build();
+      }
+      return failed(this).output("Your query was: " + safeQuery).build();
     } catch (Exception e) {
-      return failed(this)
-          .output(
-              this.getClass().getName() + " : " + e.getMessage() + "<br> Your query was: " + query)
-          .build();
+      var message = this.getClass().getName() + " : " + e.getMessage();
+      return failed(this).output(message + "<br> Your query was: " + safeQuery).build();
     }
   }
 

@@ -13,7 +13,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -91,8 +90,10 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
+    // The callers below only pass the constant queries of this lesson, no user input is involved.
+    PreparedStatement statement =
+        connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+    ResultSet results = statement.executeQuery();
     results.first();
     return results.getInt(1);
   }
@@ -114,7 +115,8 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
     String query = "SELECT * FROM employees ORDER BY salary DESC";
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    return statement.executeQuery(query);
+    PreparedStatement statement =
+        connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+    return statement.executeQuery();
   }
 }

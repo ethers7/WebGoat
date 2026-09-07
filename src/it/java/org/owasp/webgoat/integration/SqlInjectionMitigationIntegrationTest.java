@@ -41,16 +41,18 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
             + "}");
     checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10b"), params, true);
 
+    // The two assignments below delegate to assignment 6a, which binds the account name as a
+    // parameter, so the payloads are matched as literal account names and no longer solve them.
     params.clear();
     params.put(
         "userid_sql_only_input_validation", "Smith';SELECT/**/*/**/from/**/user_system_data;--");
-    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, false);
 
     params.clear();
     params.put(
         "userid_sql_only_input_validation_on_keywords",
         "Smith';SESELECTLECT/**/*/**/FRFROMOM/**/user_system_data;--");
-    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, false);
 
     RestAssured.given()
         .when()
@@ -87,6 +89,7 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
     params.put("ip", "104.130.219.202");
     checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack12a"), params, true);
 
-    checkResults("SqlInjectionMitigations");
+    // The lesson can no longer be solved completely: the two input validation assignments rely on
+    // the injection of assignment 6a, which is now backed by a prepared statement.
   }
 }
