@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -31,6 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
   "auth-bypass.hints.verify.4"
 })
 public class VerifyAccount implements AssignmentEndpoint {
+
+  // Security question answers are the only request parameters this endpoint consumes, so their
+  // names must match the expected shape as a whole instead of merely containing "secQuestion".
+  private static final Pattern SEC_QUESTION_NAME = Pattern.compile("secQuestion[A-Za-z0-9]{1,4}");
+  // Upper bounds on what a single request may put into the answer map.
+  private static final int MAX_SEC_QUESTIONS = 10;
+  private static final int MAX_ANSWER_LENGTH = 100;
 
   private final LessonSession userSessionData;
 
@@ -55,7 +63,8 @@ public class VerifyAccount implements AssignmentEndpoint {
     }
 
     // else
-    if (verificationHelper.verifyAccount(Integer.valueOf(userId), (HashMap<String, String>) submittedAnswers)) {
+    if (verificationHelper.verifyAccount(
+        Integer.valueOf(userId), (HashMap<String, String>) submittedAnswers)) {
       userSessionData.setValue("account-verified-id", userId);
       return success(this).feedback("verify-account.success").build();
     } else {
@@ -65,11 +74,20 @@ public class VerifyAccount implements AssignmentEndpoint {
 
   private HashMap<String, String> parseSecQuestions(HttpServletRequest req) {
     Map<String, String> userAnswers = new HashMap<>();
-    List<String> paramNames = Collections.list(req.getParameterNames());
+    // Validate at the trust boundary: only parameter names matching the expected security question
+    // shape are read, and at most MAX_SEC_QUESTIONS of them, so a request cannot fill the answer
+    // map with an unbounded number of arbitrarily named keys.
+    List<String> paramNames =
+        Collections.list(req.getParameterNames()).stream()
+            .filter(paramName -> SEC_QUESTION_NAME.matcher(paramName).matches())
+            .limit(MAX_SEC_QUESTIONS)
+            .toList();
     for (String paramName : paramNames) {
-      // String paramName = req.getParameterNames().nextElement();
-      if (paramName.contains("secQuestion")) {
-        userAnswers.put(paramName, req.getParameter(paramName));
+      String answer = req.getParameter(paramName);
+      // Ignore missing or oversized answers instead of storing unbounded client input;
+      // verification then fails closed because the expected number of answers is not reached.
+      if (answer != null && answer.length() <= MAX_ANSWER_LENGTH) {
+        userAnswers.put(paramName, answer);
       }
     }
     return (HashMap<String, String>) userAnswers;
