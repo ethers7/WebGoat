@@ -83,13 +83,13 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
    * Resolves a file name inside the cat pictures directory.
    *
    * <p>The canonical location is verified to stay within that directory, so a tampered file name
-   * can never make this endpoint write to an arbitrary place on the filesystem.
+   * can never make these endpoints read from or write to an arbitrary place on the filesystem.
    */
   private File resolveWithinCatPicturesDirectory(String fileName) throws IOException {
     var baseDirectory = catPicturesDirectory.getCanonicalFile().toPath();
     var resolvedFile = baseDirectory.resolve(fileName).normalize().toFile().getCanonicalFile();
     if (!resolvedFile.toPath().startsWith(baseDirectory)) {
-      throw new IOException("Refusing to write outside " + baseDirectory + ": " + fileName);
+      throw new IOException("Refusing to leave " + baseDirectory + ": " + fileName);
     }
     return resolvedFile;
   }
@@ -115,8 +115,15 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      var fileName = (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg";
+      File catPicture;
+      try {
+        catPicture = resolveWithinCatPicturesDirectory(fileName);
+      } catch (IOException e) {
+        log.warn("Refusing to serve a file outside the cat pictures directory");
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the query params");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
