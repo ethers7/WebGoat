@@ -75,12 +75,41 @@ class JWTHeaderJKUEndpointTest extends LessonTest {
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
   }
 
+  @Test
+  @DisplayName("When the JKU points to a host which is not allowed the call should fail")
+  void shouldFailWhenHostIsNotAllowed() throws Exception {
+    setupJsonWebKeySetInWebWolf();
+    var token = createTokenAndSignIt("http://not-allowed.example:%d/files/jwks".formatted(port));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/jku/delete").param("token", token).content(""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  @DisplayName("When the JKU contains credentials for an allowed host the call should fail")
+  void shouldFailWhenHostIsSmuggledThroughUserInfo() throws Exception {
+    setupJsonWebKeySetInWebWolf();
+    var token =
+        createTokenAndSignIt("http://localhost@not-allowed.example:%d/files/jwks".formatted(port));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/jku/delete").param("token", token).content(""))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
   private String createTokenAndSignIt() {
+    return createTokenAndSignIt("http://localhost:%d/files/jwks".formatted(port));
+  }
+
+  private String createTokenAndSignIt(String jku) {
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
     var token =
         Jwts.builder()
-            .setHeaderParam("jku", "http://localhost:%d/files/jwks".formatted(port))
+            .setHeaderParam("jku", jku)
             .setClaims(claims)
             .signWith(RS256, this.keyPair.getPrivate())
             .compact();
