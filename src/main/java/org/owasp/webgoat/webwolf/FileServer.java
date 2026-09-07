@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -85,18 +88,45 @@ public class FileServer {
 
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+    var destinationFile = resolveWithin(destinationDir, multipartFile.getOriginalFilename());
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", destinationFile);
 
     return new ModelAndView(
         new RedirectView("files", true),
         new ModelMap().addAttribute("uploadSuccess", UPLOAD_SUCCESSFUL));
+  }
+
+  /**
+   * Resolves the upload inside the directory of the user who uploaded it.
+   *
+   * <p>Only the bare file name of the upload is kept, so a client controlled name like {@code
+   * ../../etc/passwd} is stored as a plain file in the user's own directory instead of writing
+   * somewhere else on the filesystem. The canonical location is verified to be a direct child of
+   * that directory as well, which also stops names that resolve outside it through a symlink.
+   */
+  private static Path resolveWithin(File directory, String originalFilename) throws IOException {
+    var baseDirectory = directory.getCanonicalFile().toPath();
+    var fileName = FilenameUtils.getName(originalFilename);
+    if (!StringUtils.hasText(fileName)) {
+      throw new IOException("Upload without a usable file name");
+    }
+    Path resolvedFile;
+    try {
+      resolvedFile =
+          baseDirectory.resolve(fileName).normalize().toFile().getCanonicalFile().toPath();
+    } catch (InvalidPathException e) {
+      throw new IOException("Invalid file name", e);
+    }
+    if (!baseDirectory.equals(resolvedFile.getParent())) {
+      throw new IOException("Refusing to store the upload outside the directory of the user");
+    }
+    return resolvedFile;
   }
 
   @GetMapping(value = "/files")
