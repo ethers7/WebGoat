@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -17,12 +18,27 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  // Allow-list limiting deserialization to the classes this lesson exchanges (CWE-502): the task
+  // class in org.dummy.insecure.framework plus the String and java.time values it holds. Any
+  // other class is rejected before it is instantiated, so a crafted stream cannot reach a
+  // gadget class on the class path, and the depth/byte limits cap a hostile stream.
+  private static final String SERIAL_FILTER_PATTERN =
+      "maxdepth=10;maxbytes=8192;org.dummy.insecure.framework.*;java.lang.String;java.time.*;!*";
+
+  private static final ObjectInputFilter SERIAL_FILTER =
+      ObjectInputFilter.Config.createFilter(SERIAL_FILTER_PATTERN);
+
+  /** Returns the allow-list filter to install on every stream this lesson deserializes. */
+  static ObjectInputFilter lessonObjectInputFilter() {
+    return SERIAL_FILTER;
+  }
+
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+      ois.setObjectInputFilter(SERIAL_FILTER);
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {

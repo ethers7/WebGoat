@@ -4,10 +4,10 @@
  */
 package org.owasp.webgoat.lessons.hijacksession.cas;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoublePredicate;
 import java.util.function.Supplier;
@@ -15,14 +15,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.ApplicationScope;
 
-// weak id value and mechanism
+// Lesson design: ids handed out by GENERATE_SESSION_ID are intentionally sequential, so the learner
+// can spot the gap left by another login and hijack that session. Only this lesson's simulated
+// session store below uses them; the starting offset comes from a SecureRandom, not a weak PRNG.
 
 @ApplicationScope
 @Component
 public class HijackSessionAuthenticationProvider implements AuthenticationProvider<Authentication> {
 
   private Queue<String> sessions = new LinkedList<>();
-  private static long id = new Random().nextLong() & Long.MAX_VALUE;
+  private static long id = new SecureRandom().nextLong() & Long.MAX_VALUE;
   protected static final int MAX_SESSIONS = 50;
 
   private static final DoublePredicate PROBABILITY_DOUBLE_PREDICATE = pr -> pr < 0.75;

@@ -15,8 +15,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class SqlOnlyInputValidationTest extends LessonTest {
 
+  // This assignment delegates to assignment 6a, which binds the account name as a parameter, so
+  // the payload is matched as a literal account name instead of being executed.
   @Test
-  public void solve() throws Exception {
+  public void injectionIsTreatedAsAccountName() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/SqlOnlyInputValidation/attack")
@@ -24,8 +26,8 @@ public class SqlOnlyInputValidationTest extends LessonTest {
                     "userid_sql_only_input_validation",
                     "Smith';SELECT/**/*/**/from/**/user_system_data;--"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(true)))
-        .andExpect(jsonPath("$.feedback", containsString("passW0rD")));
+        .andExpect(jsonPath("$.lessonCompleted", is(false)))
+        .andExpect(jsonPath("$.feedback", is(messages.getMessage("sql-injection.6a.no.results"))));
   }
 
   @Test

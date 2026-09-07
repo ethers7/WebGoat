@@ -12,7 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class LabelDebugService {
 
   private static final String URL_DEBUG_LABELS_MVC = "/service/debug/labels.mvc";
+  // Not credentials: the name of the request parameter and the JSON field names of the response
+  // built below. No key material is involved.
   private static final String KEY_ENABLED = "enabled";
   private static final String KEY_SUCCESS = "success";
 
@@ -32,7 +35,7 @@ public class LabelDebugService {
    *
    * @return a {@link org.springframework.http.ResponseEntity} object.
    */
-  @RequestMapping(path = URL_DEBUG_LABELS_MVC, produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = URL_DEBUG_LABELS_MVC, produces = MediaType.APPLICATION_JSON_VALUE)
   public @ResponseBody ResponseEntity<Map<String, Object>> checkDebuggingStatus() {
     log.debug("Checking label debugging, it is {}", labelDebugger.isEnabled());
     Map<String, Object> result = createResponse(labelDebugger.isEnabled());
@@ -40,12 +43,15 @@ public class LabelDebugService {
   }
 
   /**
-   * Sets the enabled flag on the label debugger to the given parameter
+   * Sets the enabled flag on the label debugger to the given parameter.
+   *
+   * <p>This changes server side state, so it only accepts POST and cannot be triggered through a
+   * link or an image loaded from another site.
    *
    * @param enabled {@link org.owasp.webgoat.container.session.LabelDebugger} object
    * @return a {@link org.springframework.http.ResponseEntity} object.
    */
-  @RequestMapping(
+  @PostMapping(
       value = URL_DEBUG_LABELS_MVC,
       produces = MediaType.APPLICATION_JSON_VALUE,
       params = KEY_ENABLED)

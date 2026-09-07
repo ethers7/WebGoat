@@ -7,8 +7,8 @@ package org.owasp.webgoat.lessons.httpbasics;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -28,11 +28,11 @@ import jakarta.servlet.http.HttpServletRequest;
 @AssignmentHints({ "http-basics.hints.http_basics_external.1" })
 public class HttpBasicsExternal implements AssignmentEndpoint {
     private final LessonSession lessonSession;
-    private final Random random;
+    private final SecureRandom random;
 
     public HttpBasicsExternal(LessonSession lessonSession) {
         this.lessonSession = lessonSession;
-        this.random = new Random();
+        this.random = new SecureRandom();
     }
 
     @PostMapping("/HttpBasics/externalcheck")

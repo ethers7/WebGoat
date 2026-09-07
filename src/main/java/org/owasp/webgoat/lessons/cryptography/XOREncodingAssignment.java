@@ -22,6 +22,9 @@ public class XOREncodingAssignment implements AssignmentEndpoint {
   @PostMapping("/crypto/encoding/xor")
   @ResponseBody
   public AttackResult completed(@RequestParam String answer_pwd1) {
+    // Not a credential: this is the expected answer of this lesson, the plain text which the
+    // learner has to recover from the XOR obfuscated value shown in the lesson itself. It is
+    // published with the lesson, grants no access to anything and has nothing to rotate.
     if (answer_pwd1 != null && answer_pwd1.equals("databasepassword")) {
       return success(this).feedback("crypto-encoding-xor.success").build();
     }

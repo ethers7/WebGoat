@@ -10,8 +10,10 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.util.Base64;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -35,12 +37,17 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
     String b64token;
     long before;
     long after;
-    int delay;
 
     b64token = token.replace('-', '+').replace('_', '/');
 
+    // Records that the allow-list refused a class, so the learner still gets accurate feedback.
+    AtomicBoolean rejectedClass = new AtomicBoolean(false);
+
     try (ObjectInputStream ois =
         new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+      // Only the classes this lesson exchanges may be instantiated from the submitted stream; any
+      // other class (a gadget chain, for example) is refused before readObject() can reach it.
+      ois.setObjectInputFilter(info -> checkAgainstAllowList(info, rejectedClass));
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
@@ -51,6 +58,9 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
       }
       after = System.currentTimeMillis();
     } catch (InvalidClassException e) {
+      if (rejectedClass.get()) {
+        return failed(this).feedback("insecure-deserialization.wrongobject").build();
+      }
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (IllegalArgumentException e) {
       return failed(this).feedback("insecure-deserialization.expired").build();
@@ -58,7 +68,7 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     }
 
-    delay = (int) (after - before);
+    int delay = (int) (after - before);
     if (delay > 7000) {
       return failed(this).build();
     }
@@ -66,5 +76,14 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
       return failed(this).build();
     }
     return success(this).build();
+  }
+
+  private static ObjectInputFilter.Status checkAgainstAllowList(
+      ObjectInputFilter.FilterInfo info, AtomicBoolean rejectedClass) {
+    var status = SerializationHelper.lessonObjectInputFilter().checkInput(info);
+    if (status == ObjectInputFilter.Status.REJECTED) {
+      rejectedClass.set(true);
+    }
+    return status;
   }
 }

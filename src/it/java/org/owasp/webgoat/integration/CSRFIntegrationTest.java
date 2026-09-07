@@ -52,6 +52,9 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "<input type=\"submit\" value=\"assignment 7\"/>\n"
           + "</form></body></html>";
 
+  // Test fixture, not a credential: this CSRF test registers a throwaway
+  // "csrf-<user>" account on the ephemeral test instance with this literal
+  // password, so there is nothing to rotate.
   private static final String trickHTML8 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"username\" value=\"csrf-USERNAME\"/>\n"

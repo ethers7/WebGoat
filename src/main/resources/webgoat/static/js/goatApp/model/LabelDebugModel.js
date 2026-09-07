@@ -20,7 +20,9 @@ define([
             options || (options = {});
             var data = (options.data || {});
             if(this.enabled != undefined) {
+            	// Toggling the setting changes server side state, so the service only accepts POST.
             	options.data = { enabled: !this.enabled };
+            	options.type = 'POST';
             }
             return Backbone.Collection.prototype.fetch.call(this, options);
 		},

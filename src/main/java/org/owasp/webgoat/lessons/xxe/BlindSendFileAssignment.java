@@ -53,15 +53,30 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
-    if (!targetDirectory.exists()) {
-      targetDirectory.mkdirs();
-    }
     try {
-      Files.writeString(new File(targetDirectory, "secret.txt").toPath(), fileContents, UTF_8);
+      var xxeDirectory = new File(webGoatHomeDirectory, "XXE");
+      File targetDirectory = resolveWithin(xxeDirectory, user.getUsername());
+      Files.createDirectories(targetDirectory.toPath());
+      var secretFile = resolveWithin(targetDirectory, "secret.txt");
+      Files.writeString(secretFile.toPath(), fileContents, UTF_8);
     } catch (IOException e) {
-      log.error("Unable to write 'secret.txt' to '{}", targetDirectory);
+      log.error("Unable to write 'secret.txt' for user '{}'", user.getUsername(), e);
     }
+  }
+
+  /**
+   * Resolves {@code name} inside {@code directory}, rejecting anything that escapes it.
+   *
+   * <p>The canonical location has to be a real descendant of the given directory, so a tampered
+   * user name can never make this assignment write to an arbitrary place on the filesystem.
+   */
+  private static File resolveWithin(File directory, String name) throws IOException {
+    var base = directory.getCanonicalFile();
+    var resolvedFile = base.toPath().resolve(name).normalize().toFile().getCanonicalFile();
+    if (resolvedFile.equals(base) || !resolvedFile.toPath().startsWith(base.toPath())) {
+      throw new IOException("Refusing to leave " + base + ": " + name);
+    }
+    return resolvedFile;
   }
 
   @PostMapping(path = "/xxe/blind", consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)

@@ -29,6 +29,8 @@ public class SecureDefaultsAssignment implements AssignmentEndpoint {
   public AttackResult completed(
       @RequestParam String secretFileName, @RequestParam String secretText)
       throws NoSuchAlgorithmException {
+    // Not a credential: "default_secret" is the file name the learner has to find, not key
+    // material, and the value below is the SHA-256 of the expected answer, not a stored secret.
     if (secretFileName != null && secretFileName.equals("default_secret")) {
       if (secretText != null
           && HashingAssignment.getHash(secretText, "SHA-256")

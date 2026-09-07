@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -48,16 +49,18 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
-      uploadedFile.createNewFile();
-      FileCopyUtils.copy(file.getBytes(), uploadedFile);
-
-      if (attemptWasMade(uploadDirectory, uploadedFile)) {
-        return solvedIt(uploadedFile);
+      var requestedFile = resolveCanonical(uploadDirectory, fullName);
+      if (!isWithin(uploadDirectory, requestedFile)) {
+        // The name traverses out of the upload directory of the user. Nothing is written
+        // outside that directory, the attempt itself is what the assignment grades.
+        return solvedIt(requestedFile);
       }
+      requestedFile.createNewFile();
+      FileCopyUtils.copy(file.getBytes(), requestedFile);
+
       return informationMessage(this)
           .feedback("path-traversal-profile-updated")
-          .feedbackArgs(uploadedFile.getAbsoluteFile())
+          .feedbackArgs(requestedFile.getAbsoluteFile())
           .build();
 
     } catch (IOException e) {
@@ -67,7 +70,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    var uploadDirectory = resolveWithin(pathTraversalDirectory(), username);
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
@@ -75,21 +78,50 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     return uploadDirectory;
   }
 
-  private boolean attemptWasMade(File expectedUploadDirectory, File uploadedFile)
-      throws IOException {
-    return !expectedUploadDirectory
-        .getCanonicalPath()
-        .equals(uploadedFile.getParentFile().getCanonicalPath());
+  /**
+   * Resolves {@code name} inside {@code directory}, rejecting anything that escapes it.
+   *
+   * <p>The canonical location has to be a real descendant of the given directory, so a tampered
+   * name can never make these assignments read from or write to an arbitrary place on the
+   * filesystem.
+   */
+  protected static File resolveWithin(File directory, String name) throws IOException {
+    var base = directory.getCanonicalFile();
+    var resolvedFile = resolveCanonical(base, name);
+    if (resolvedFile.equals(base) || !isWithin(base, resolvedFile)) {
+      throw new IOException("Refusing to leave " + base + ": " + name);
+    }
+    return resolvedFile;
   }
 
-  private AttackResult solvedIt(File uploadedFile) throws IOException {
-    if (uploadedFile.getCanonicalFile().getParentFile().getName().endsWith("PathTraversal")) {
+  /** Canonicalizes {@code name} relative to {@code directory}, without confining it. */
+  protected static File resolveCanonical(File directory, String name) throws IOException {
+    var base = directory.getCanonicalFile().toPath();
+    try {
+      return base.resolve(name).normalize().toFile().getCanonicalFile();
+    } catch (InvalidPathException e) {
+      throw new IOException("Invalid file name", e);
+    }
+  }
+
+  /** Tells whether {@code candidate} is located inside {@code directory}. */
+  protected static boolean isWithin(File directory, File candidate) throws IOException {
+    var base = directory.getCanonicalFile().toPath();
+    return candidate.getCanonicalFile().toPath().startsWith(base);
+  }
+
+  private File pathTraversalDirectory() {
+    return new File(this.webGoatHomeDirectory, "PathTraversal");
+  }
+
+  private AttackResult solvedIt(File requestedFile) {
+    if (requestedFile.getParentFile().getName().endsWith("PathTraversal")) {
       return success(this).build();
     }
     return failed(this)
         .attemptWasMade()
         .feedback("path-traversal-profile-attempt")
-        .feedbackArgs(uploadedFile.getCanonicalPath())
+        .feedbackArgs(requestedFile.getPath())
         .build();
   }
 
@@ -100,23 +132,30 @@ public class ProfileUploadBase implements AssignmentEndpoint {
   }
 
   protected byte[] getProfilePictureAsBase64(String username) {
-    var profilePictureDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
-    var profileDirectoryFiles = profilePictureDirectory.listFiles();
+    try {
+      var profilePictureDirectory = resolveWithin(pathTraversalDirectory(), username);
+      var profileDirectoryFiles = profilePictureDirectory.listFiles();
 
-    if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
+      if (profileDirectoryFiles == null || profileDirectoryFiles.length == 0) {
+        return defaultImage();
+      }
       return Arrays.stream(profileDirectoryFiles)
           .filter(file -> FilenameUtils.isExtension(file.getName(), List.of("jpg", "png")))
           .findFirst()
-          .map(
-              file -> {
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
-                  return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
-                } catch (IOException e) {
-                  return defaultImage();
-                }
-              })
+          .map(file -> readProfilePicture(profilePictureDirectory, file))
           .orElse(defaultImage());
-    } else {
+    } catch (IOException e) {
+      return defaultImage();
+    }
+  }
+
+  private byte[] readProfilePicture(File profilePictureDirectory, File profilePicture) {
+    try {
+      var picture = resolveWithin(profilePictureDirectory, profilePicture.getName());
+      try (var inputStream = new FileInputStream(picture)) {
+        return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
+      }
+    } catch (IOException e) {
       return defaultImage();
     }
   }

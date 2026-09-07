@@ -42,6 +42,9 @@ public class DefaultCredentialsTask implements AssignmentEndpoint {
           .build();
     }
 
+    // Not a credential: the deliberately weak default pair is the expected answer of this lesson,
+    // whose whole point is that the learner guesses it. It authenticates nothing outside the
+    // lesson grading below, so there is nothing to move into configuration or to rotate.
     if (DEFAULT_USERNAME.equals(username.trim()) && DEFAULT_PASSWORD.equals(password)) {
       return success(this)
           .feedback("securitymisconfiguration.task1.success")

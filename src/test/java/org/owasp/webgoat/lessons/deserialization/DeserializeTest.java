@@ -4,10 +4,14 @@
  */
 package org.owasp.webgoat.lessons.deserialization;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.InvalidClassException;
+import java.util.ArrayList;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
@@ -94,5 +98,33 @@ class DeserializeTest extends LessonTest {
                 "$.feedback",
                 CoreMatchers.is(messages.getMessage("insecure-deserialization.stringobject"))))
         .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  void classOutsideTheAllowListIsRejected() throws Exception {
+    String token = SerializationHelper.toString(new ArrayList<String>());
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/InsecureDeserialization/task").param("token", token))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath(
+                "$.feedback",
+                CoreMatchers.is(messages.getMessage("insecure-deserialization.wrongobject"))))
+        .andExpect(jsonPath("$.lessonCompleted", is(false)));
+  }
+
+  @Test
+  void serializationHelperAllowsLessonObject() throws Exception {
+    String token = SerializationHelper.toString(new VulnerableTaskHolder("hello", "echo hello"));
+
+    assertThat(SerializationHelper.fromString(token)).isInstanceOf(VulnerableTaskHolder.class);
+  }
+
+  @Test
+  void serializationHelperRejectsClassOutsideTheAllowList() throws Exception {
+    String token = SerializationHelper.toString(new ArrayList<String>());
+
+    assertThatExceptionOfType(InvalidClassException.class)
+        .isThrownBy(() -> SerializationHelper.fromString(token));
   }
 }

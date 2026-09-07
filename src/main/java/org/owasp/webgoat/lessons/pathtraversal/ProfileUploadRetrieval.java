@@ -61,7 +61,10 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        var catPicture = resolveWithinCatPicturesDirectory(i + ".jpg");
+        try (var outputStream = new FileOutputStream(catPicture)) {
+          FileCopyUtils.copy(is, outputStream);
+        }
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
@@ -74,6 +77,21 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     } catch (IOException e) {
       log.error("Unable to write secret in: {}", secretDirectory, e);
     }
+  }
+
+  /**
+   * Resolves a file name inside the cat pictures directory.
+   *
+   * <p>The canonical location is verified to stay within that directory, so a tampered file name
+   * can never make these endpoints read from or write to an arbitrary place on the filesystem.
+   */
+  private File resolveWithinCatPicturesDirectory(String fileName) throws IOException {
+    var baseDirectory = catPicturesDirectory.getCanonicalFile().toPath();
+    var resolvedFile = baseDirectory.resolve(fileName).normalize().toFile().getCanonicalFile();
+    if (!resolvedFile.toPath().startsWith(baseDirectory)) {
+      throw new IOException("Refusing to leave " + baseDirectory + ": " + fileName);
+    }
+    return resolvedFile;
   }
 
   @PostMapping("/PathTraversal/random")
@@ -97,8 +115,15 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      var fileName = (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg";
+      File catPicture;
+      try {
+        catPicture = resolveWithinCatPicturesDirectory(fileName);
+      } catch (IOException e) {
+        log.warn("Refusing to serve a file outside the cat pictures directory");
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the query params");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()

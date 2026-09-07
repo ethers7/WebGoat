@@ -128,7 +128,7 @@
         <span class="tiny-hint">Use strict allow lists, canonical host comparison, and server-side mapping of destination ids.</span>
       </form>
       <p>
-        <small>Also experiment with a real (unsafe) redirect: <code>/OpenRedirect/realRedirect?url=https://example.com</code></small>
+        <small>Also experiment with a guarded real redirect: <code>/OpenRedirect/realRedirect?url=/welcome.mvc</code> follows a same-origin relative path, while <code>/OpenRedirect/realRedirect?url=https://example.com</code> is refused and lands on a safe internal destination instead.</small>
       </p>
       <div class="attack-feedback"></div>
       <div class="attack-output"></div>

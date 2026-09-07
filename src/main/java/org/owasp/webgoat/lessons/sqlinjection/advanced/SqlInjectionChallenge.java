@@ -12,8 +12,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -35,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
       "SqlInjectionChallenge6",
       "SqlInjectionChallenge7"
     })
-
 public class SqlInjectionChallenge implements AssignmentEndpoint {
 
   private final LessonDataSource dataSource;
@@ -56,10 +53,10 @@ public class SqlInjectionChallenge implements AssignmentEndpoint {
     if (attackResult.assignmentSolved()) {
 
       try (Connection connection = dataSource.getConnection()) {
-        String checkUserQuery =
-            "select userid from sql_challenge_users where userid = '" + username + "'";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(checkUserQuery);
+        String checkUserQuery = "select userid from sql_challenge_users where userid = ?";
+        PreparedStatement statement = connection.prepareStatement(checkUserQuery);
+        statement.setString(1, username);
+        ResultSet resultSet = statement.executeQuery();
 
         if (resultSet.next()) {
           attackResult = failed(this).feedback("user.exists").feedbackArgs(username).build();
@@ -90,8 +87,6 @@ public class SqlInjectionChallenge implements AssignmentEndpoint {
       return failed(this).feedback("input.invalid").build();
     }
 
-    return success(this)
-        .feedback("User created successfully!")
-        .build();
+    return success(this).feedback("User created successfully!").build();
   }
 }

@@ -85,6 +85,20 @@ class FileServerTest {
   }
 
   @Test
+  @DisplayName("An upload cannot escape the directory of the user with '../' in the file name")
+  void shouldStoreTraversalUploadInsideUserDirectory() throws Exception {
+    FileUtils.cleanDirectory(fileServerLocation.toFile());
+    mockMvc
+        .perform(multipart("/fileupload").file(traversalUpload()).principal(AUTHENTICATION))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("files?uploadSuccess=File+uploaded+successful"));
+
+    // only the bare file name is used, so nothing is written next to the file server location
+    Assertions.assertThat(uploadedFiles()).hasSize(1);
+    Assertions.assertThat(userDirectory().resolve("escaped.txt")).content().isEqualTo("escaped");
+  }
+
+  @Test
   @DisplayName("An uploaded file is listed on the files page")
   void shouldListUploadedFile() throws Exception {
     mockMvc.perform(multipart("/fileupload").file(testFile()).principal(AUTHENTICATION));
@@ -119,6 +133,14 @@ class FileServerTest {
     mockMvc
         .perform(
             get("/files")
+                .param("uploadSuccess", FileServer.NOTHING_TO_UPLOAD)
+                .principal(AUTHENTICATION))
+        .andExpect(model().attribute("uploadSuccess", FileServer.NOTHING_TO_UPLOAD))
+        .andExpect(model().attribute("uploadFailed", true));
+
+    mockMvc
+        .perform(
+            get("/files")
                 .param("uploadSuccess", FileServer.UPLOAD_SUCCESSFUL)
                 .principal(AUTHENTICATION))
         .andExpect(model().attribute("uploadFailed", false));
@@ -126,6 +148,19 @@ class FileServerTest {
     // no message means no alert on the files page
     mockMvc
         .perform(get("/files").principal(AUTHENTICATION))
+        .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
+  }
+
+  @Test
+  @DisplayName("A message the file server never sends is not shown on the files page")
+  void shouldIgnoreUploadMessageWhichIsNotOurOwn() throws Exception {
+    mockMvc
+        .perform(
+            get("/files")
+                .param("uploadSuccess", "Session expired, please enter your password again")
+                .principal(AUTHENTICATION))
+        .andExpect(status().isOk())
+        .andExpect(view().name("files"))
         .andExpect(model().attributeDoesNotExist("uploadSuccess", "uploadFailed"));
   }
 
@@ -141,6 +176,11 @@ class FileServerTest {
 
   private MockMultipartFile emptyUpload() {
     return new MockMultipartFile("file", "", "application/octet-stream", new byte[0]);
+  }
+
+  private MockMultipartFile traversalUpload() {
+    return new MockMultipartFile(
+        "file", "../../escaped.txt", "text/plain", "escaped".getBytes(StandardCharsets.UTF_8));
   }
 
   private MockMultipartFile testFile() {

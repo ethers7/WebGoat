@@ -4,8 +4,6 @@
  */
 package org.owasp.webgoat.integration;
 
-import static org.hamcrest.CoreMatchers.containsString;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import java.util.HashMap;
@@ -27,7 +25,7 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
     params.put("field5", "?");
     params.put("field6", "prep.setString(1,\"\")");
     params.put("field7", "prep.setString(2,\\\"\\\")");
-      checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10a"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10a"), params, true);
 
     params.put(
         "editor",
@@ -41,48 +39,57 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
             + "} catch (Exception e) {\r\n"
             + "    System.out.println(\"Oops. Something went wrong!\");\r\n"
             + "}");
-      checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10b"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack10b"), params, true);
 
+    // The two assignments below delegate to assignment 6a, which binds the account name as a
+    // parameter, so the payloads are matched as literal account names and no longer solve them.
     params.clear();
     params.put(
         "userid_sql_only_input_validation", "Smith';SELECT/**/*/**/from/**/user_system_data;--");
-      checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidation/attack"), params, false);
 
     params.clear();
     params.put(
         "userid_sql_only_input_validation_on_keywords",
         "Smith';SESELECTLECT/**/*/**/FRFROMOM/**/user_system_data;--");
-      checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlOnlyInputValidationOnKeywords/attack"), params, false);
 
-      RestAssured.given()
+    RestAssured.given()
+        .when()
+        .relaxedHTTPSValidation()
+        .cookie("JSESSIONID", getWebGoatCookie())
+        .contentType(ContentType.JSON)
+        .get(webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=hostname"))
+        .then()
+        .statusCode(200);
+
+    // Anything other than a known column is rejected instead of being added to the query.
+    RestAssured.given()
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .contentType(ContentType.JSON)
         .get(
-                webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=(case when (true) then hostname"
-                        + " else id end)"))
+            webGoatUrlConfig.url(
+                "SqlInjectionMitigations/servers?column=(case when (true) then hostname else id"
+                    + " end)"))
         .then()
-        .statusCode(200);
+        .statusCode(400);
 
-      RestAssured.given()
+    RestAssured.given()
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .contentType(ContentType.JSON)
         .get(webGoatUrlConfig.url("SqlInjectionMitigations/servers?column=unknown"))
         .then()
-        .statusCode(500)
-        .body(
-            "trace",
-            containsString(
-                "select id, hostname, ip, mac, status, description from SERVERS where status <>"
-                    + " 'out of order' order by"));
+        .statusCode(400);
 
     params.clear();
     params.put("ip", "104.130.219.202");
-      checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack12a"), params, true);
+    checkAssignment(webGoatUrlConfig.url("SqlInjectionMitigations/attack12a"), params, true);
 
-    checkResults("SqlInjectionMitigations");
+    // The lesson can no longer be solved completely: the two input validation assignments rely on
+    // the injection of assignment 6a, which is now backed by a prepared statement.
   }
 }

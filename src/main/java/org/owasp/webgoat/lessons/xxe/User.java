@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class User {
 
   private String username = "";
+  // Empty placeholder: the value is bound from the XML payload of the lesson at runtime, so no
+  // credential is stored here.
   private String password = "";
 
   public String getPassword() {

@@ -7,6 +7,7 @@ package org.owasp.webgoat.container.users;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.owasp.webgoat.container.lessons.Initializable;
@@ -20,6 +21,11 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class UserService implements UserDetailsService {
+
+  // A schema name is an identifier which cannot be bound as a parameter, so a user name is only
+  // used in the statement below when it consists of characters which are safe inside a quoted
+  // identifier. Everything else (quotes, whitespace, semicolons, ...) is rejected.
+  private static final Pattern VALID_SCHEMA_NAME = Pattern.compile("[A-Za-z0-9_.@+-]{1,128}");
 
   private final UserRepository userRepository;
   private final UserProgressRepository userTrackerRepository;
@@ -42,6 +48,8 @@ public class UserService implements UserDetailsService {
   }
 
   public void addUser(String username, String password) {
+    // fail before anything is persisted when the name cannot be used as a schema name
+    validateSchemaName(username);
     // get user if there exists one by the name
     var userAlreadyExists = userRepository.existsByUsername(username);
     var webGoatUser = userRepository.save(new WebGoatUser(username, password));
@@ -75,8 +83,16 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
-    flywayLessons.apply(webGoatUser.getUsername()).migrate();
+    var schema = validateSchemaName(webGoatUser.getUsername());
+    jdbcTemplate.execute("CREATE SCHEMA \"" + schema + "\" authorization dba");
+    flywayLessons.apply(schema).migrate();
+  }
+
+  private static String validateSchemaName(String username) {
+    if (username == null || !VALID_SCHEMA_NAME.matcher(username).matches()) {
+      throw new IllegalArgumentException("Username contains characters which are not allowed");
+    }
+    return username;
   }
 
   public List<WebGoatUser> getAllUsers() {

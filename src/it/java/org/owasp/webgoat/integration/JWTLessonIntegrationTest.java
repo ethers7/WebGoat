@@ -216,11 +216,12 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
   }
 
   private void deleteTomThroughKidClaim() {
+    // The kid header is looked up as a bound parameter, so it can no longer inject a key of its
+    // own. It still selects which key verifies the token, so the assignment is solved by pointing
+    // it at a key which is known to the attacker.
     var header = new HashMap<String, Object>();
     header.put(Header.TYPE, Header.JWT_TYPE);
-    header.put(
-        JwsHeader.KEY_ID,
-        "hacked' UNION select 'deletingTom' from INFORMATION_SCHEMA.SYSTEM_USERS --");
+    header.put(JwsHeader.KEY_ID, "webgoat_key");
     String token =
         Jwts.builder()
             .setHeader(header)
@@ -232,7 +233,7 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
             .claim("username", "Tom")
             .claim("Email", "tom@webgoat.org")
             .claim("Role", new String[] {"Manager", "Project Administrator"})
-            .signWith(SignatureAlgorithm.HS256, "deletingTom")
+            .signWith(SignatureAlgorithm.HS512, "qwertyqwerty1234")
             .compact();
 
     MatcherAssert.assertThat(

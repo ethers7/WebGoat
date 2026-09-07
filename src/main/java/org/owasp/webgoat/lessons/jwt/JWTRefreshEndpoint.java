@@ -14,6 +14,8 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,7 +44,14 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
+  // Not a credential: the login password of this lesson's fake shop, which the lesson hands to
+  // every learner in its own front end (src/main/resources/lessons/jwt/js/jwt-refresh.js).
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+
+  // Signing key of the tokens minted by this lesson only, and it has to keep this exact value: the
+  // lesson ships an access log with a token for Tom (lessons/jwt/images/logs.txt) which the learner
+  // replays against /JWT/refresh/newToken, and that token verifies under this key alone. It signs
+  // nothing outside this lesson, so there is no credential here to move into configuration.
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 
@@ -58,10 +67,21 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
     String user = (String) json.get("user");
     String password = (String) json.get("password");
 
-    if ("Jerry".equalsIgnoreCase(user) && PASSWORD.equals(password)) {
+    if ("Jerry".equalsIgnoreCase(user) && matchesPassword(password)) {
       return ok(createNewTokens(user));
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+  }
+
+  // Compares the submitted password with the expected one in constant time, so the response time
+  // of this login endpoint does not leak the password of the account used to mint tokens.
+  private static boolean matchesPassword(String submittedPassword) {
+    if (submittedPassword == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        PASSWORD.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   private Map<String, Object> createNewTokens(String user) {

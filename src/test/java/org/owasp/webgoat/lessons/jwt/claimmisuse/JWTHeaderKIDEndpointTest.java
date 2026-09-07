@@ -32,13 +32,15 @@ public class JWTHeaderKIDEndpointTest extends LessonTest {
 
   @Test
   public void solveAssignment() throws Exception {
-    String key = "deletingTom";
+    // The kid header is looked up as a bound parameter, so it can no longer inject a key of its
+    // own. It still selects which key verifies the token, so a token which claims to be Tom and
+    // points at a key which is known to the attacker is accepted.
+    String key = "qwertyqwerty1234";
     Map<String, Object> claims = new HashMap<>();
     claims.put("username", "Tom");
     String token =
         Jwts.builder()
-            .setHeaderParam(
-                "kid", "hacked' UNION select '" + key + "' from INFORMATION_SCHEMA.SYSTEM_USERS --")
+            .setHeaderParam("kid", "webgoat_key")
             .setIssuedAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toDays(10)))
             .setClaims(claims)
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, key)

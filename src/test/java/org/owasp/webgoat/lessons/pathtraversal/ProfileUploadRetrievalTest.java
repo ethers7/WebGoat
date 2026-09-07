@@ -42,22 +42,19 @@ class ProfileUploadRetrievalTest extends LessonTest {
         .andExpect(header().string("Location", containsString("?id=")))
         .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
 
-    // Browse the directories
+    // Browsing the directories is rejected, the file name stays inside the cat pictures directory
     var uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2F");
     mockMvc
         .perform(get(uri))
-        .andExpect(status().is(404))
-        // .andDo(MockMvcResultHandlers.print())
-        .andExpect(content().string(containsString("path-traversal-secret.jpg")));
+        .andExpect(status().is(400))
+        .andExpect(content().string(containsString("Illegal characters are not allowed")));
 
-    // Retrieve the secret file (note: .jpg is added by the server)
+    // Retrieving the secret file outside the cat pictures directory is rejected as well
     uri = new URI("/PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret");
     mockMvc
         .perform(get(uri))
-        .andExpect(status().is(200))
-        .andExpect(
-            content().string("You found it submit the SHA-512 hash of your username as answer"))
-        .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_JPEG));
+        .andExpect(status().is(400))
+        .andExpect(content().string(containsString("Illegal characters are not allowed")));
 
     // Post flag
     mockMvc

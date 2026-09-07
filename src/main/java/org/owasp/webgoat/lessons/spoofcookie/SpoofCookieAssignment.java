@@ -9,7 +9,10 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.inform
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -54,9 +57,21 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   }
 
   @GetMapping(path = "/SpoofCookie/cleanup")
-  public void cleanup(HttpServletResponse response) {
+  public void cleanup(HttpServletRequest request, HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
+    // Must repeat the path the cookie was issued with, otherwise the browser stores a second
+    // cookie for /SpoofCookie instead of expiring the one on /WebGoat.
+    cookie.setPath("/WebGoat");
+    // The cookie is HttpOnly (see credentialsLoginFlow), so expiring it has to happen here on the
+    // server; the lesson page calls this endpoint from its "Delete cookie" link.
+    cookie.setHttpOnly(true);
+    // Mirror the transport of the current request: WebGoat can be served over plain HTTP
+    // (server.ssl.enabled=false), where a Secure cookie is rejected and the cookie would never
+    // be erased, so the flag is only set for HTTPS requests.
+    if (request.isSecure()) {
+      cookie.setSecure(true);
+    }
     response.addCookie(cookie);
   }
 
@@ -64,16 +79,20 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       String username, String password, HttpServletResponse response) {
     String lowerCasedUsername = username.toLowerCase();
     if (ATTACK_USERNAME.equals(lowerCasedUsername)
-        && users.get(lowerCasedUsername).equals(password)) {
+        && matchesPassword(users.get(lowerCasedUsername), password)) {
       return informationMessage(this).feedback("spoofcookie.cheating").build();
     }
 
     String authPassword = users.getOrDefault(lowerCasedUsername, "");
-    if (!authPassword.isBlank() && authPassword.equals(password)) {
+    if (!authPassword.isBlank() && matchesPassword(authPassword, password)) {
       String newCookieValue = EncDec.encode(lowerCasedUsername);
       Cookie newCookie = new Cookie(COOKIE_NAME, newCookieValue);
       newCookie.setPath("/WebGoat");
       newCookie.setSecure(true);
+      // Hide the cookie from JavaScript. The lesson still shows its value in the output below and
+      // the attack is performed by sending a forged cookie in a request, which HttpOnly does not
+      // prevent; the lesson page no longer reads document.cookie (see lessons/spoofcookie/js).
+      newCookie.setHttpOnly(true);
       response.addCookie(newCookie);
       return informationMessage(this)
           .feedback("spoofcookie.login")
@@ -82,6 +101,18 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
     }
 
     return informationMessage(this).feedback("spoofcookie.wrong-login").build();
+  }
+
+  // Compares a stored password with the submitted one in constant time. A plain equals returns
+  // as soon as the first byte differs, so the response time of this login flow can leak the
+  // stored password character by character.
+  private static boolean matchesPassword(String storedPassword, String submittedPassword) {
+    if (storedPassword == null || submittedPassword == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        storedPassword.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   private AttackResult cookieLoginFlow(String cookieValue) {

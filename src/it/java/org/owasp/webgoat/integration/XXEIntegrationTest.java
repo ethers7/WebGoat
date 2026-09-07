@@ -42,7 +42,7 @@ public class XXEIntegrationTest extends IntegrationTest {
   //        .when()
   //        .relaxedHTTPSValidation()
   //        .cookie("JSESSIONID", getWebGoatCookie())
-  //        .get(url("service/enable-security.mvc"))
+  //        .post(url("service/enable-security.mvc"))
   //        .then()
   //        .statusCode(200);
   //    checkAssignment(url("xxe/simple"), ContentType.XML, xxe3, false);

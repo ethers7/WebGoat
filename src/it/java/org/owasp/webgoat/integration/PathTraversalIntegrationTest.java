@@ -103,18 +103,20 @@ class PathTraversalIT extends IntegrationTest {
 
   private void assignment4() throws IOException {
     var uri = "PathTraversal/random-picture?id=%2E%2E%2F%2E%2E%2Fpath-traversal-secret";
-      RestAssured.given()
+    // The requested file name is confined to the cat pictures directory, so traversing out of it
+    // no longer exposes the secret file
+    RestAssured.given()
         .urlEncodingEnabled(false)
         .when()
         .relaxedHTTPSValidation()
         .cookie("JSESSIONID", getWebGoatCookie())
         .get(webGoatUrlConfig.url(uri))
         .then()
-        .statusCode(200)
-        .body(CoreMatchers.is("You found it submit the SHA-512 hash of your username as answer"));
+        .statusCode(400)
+        .body(CoreMatchers.containsString("Illegal characters are not allowed"));
 
-      checkAssignment(
-              webGoatUrlConfig.url("PathTraversal/random"),
+    checkAssignment(
+        webGoatUrlConfig.url("PathTraversal/random"),
         Map.of("secret", Sha512DigestUtils.shaHex(this.getUser())),
         true);
   }
@@ -145,6 +147,11 @@ class PathTraversalIT extends IntegrationTest {
             .extract()
             .path("lessonCompleted"),
         CoreMatchers.is(true));
+
+    // The zip slip attempt is what solves the assignment, the entry itself is never extracted
+    // outside the temporary extraction directory
+    MatcherAssert.assertThat(
+        new File(webGoatDirectory, "image.jpg").exists(), CoreMatchers.is(false));
   }
 
   @AfterEach

@@ -10,9 +10,9 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -47,22 +47,22 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
-    String queryInjection =
-        "SELECT * FROM employees WHERE last_name = '"
-            + name
-            + "' AND auth_tan = '"
-            + auth_tan
-            + "'";
+    // The name and the TAN are bound as parameters, so they are always treated as values and can
+    // never append a second statement to this query.
+    String query = "SELECT * FROM employees WHERE last_name = ? AND auth_tan = ?";
     try (Connection connection = dataSource.getConnection()) {
       // V2019_09_26_7__employees.sql
       int oldMaxSalary = this.getMaxSalary(connection);
       int oldSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
       // begin transaction
       connection.setAutoCommit(false);
-      // do injectable query
-      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      // do the query with bound parameters
+      PreparedStatement statement =
+          connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+      statement.setString(1, name);
+      statement.setString(2, auth_tan);
+      SqlInjectionLesson8.log(connection, query);
+      statement.execute();
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
@@ -90,8 +90,10 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
+    // The callers below only pass the constant queries of this lesson, no user input is involved.
+    PreparedStatement statement =
+        connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+    ResultSet results = statement.executeQuery();
     results.first();
     return results.getInt(1);
   }
@@ -113,7 +115,8 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
     String query = "SELECT * FROM employees ORDER BY salary DESC";
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    return statement.executeQuery(query);
+    PreparedStatement statement =
+        connection.prepareStatement(query, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+    return statement.executeQuery();
   }
 }

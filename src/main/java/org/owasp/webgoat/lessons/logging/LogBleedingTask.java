@@ -8,6 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.UUID;
 import org.apache.logging.log4j.util.Strings;
@@ -40,10 +41,18 @@ public class LogBleedingTask implements AssignmentEndpoint {
       return failed(this).output("Please provide username (Admin) and password").build();
     }
 
-    if (username.equals("Admin") && password.equals(this.password)) {
+    if (username.equals("Admin") && matchesPassword(password)) {
       return success(this).build();
     }
 
     return failed(this).build();
+  }
+
+  // Compares the submitted password with the generated one in constant time, so the response
+  // time of this endpoint does not leak the password which has to be found in the log.
+  private boolean matchesPassword(String submittedPassword) {
+    return MessageDigest.isEqual(
+        this.password.getBytes(StandardCharsets.UTF_8),
+        submittedPassword.getBytes(StandardCharsets.UTF_8));
   }
 }

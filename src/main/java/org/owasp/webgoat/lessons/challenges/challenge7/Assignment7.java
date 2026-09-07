@@ -9,6 +9,8 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -33,6 +35,9 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
+  // Not a credential: the reset link of this challenge, which the learner is meant to recover from
+  // the git repository the challenge serves itself (lessons/challenges/challenge7/git.zip). It
+  // guards only the challenge flag below, so there is nothing to move into configuration.
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
   private static final String TEMPLATE =
@@ -59,7 +64,7 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (matchesAdminResetLink(link)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
@@ -69,6 +74,14 @@ public class Assignment7 implements AssignmentEndpoint {
     }
     return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT)
         .body("That is not the reset link for admin");
+  }
+
+  // Compares the reset link from the request with the admin one in constant time, so the response
+  // time of this endpoint does not leak the link which guards the flag of this challenge.
+  private static boolean matchesAdminResetLink(String link) {
+    return MessageDigest.isEqual(
+        ADMIN_PASSWORD_LINK.getBytes(StandardCharsets.UTF_8),
+        link.getBytes(StandardCharsets.UTF_8));
   }
 
   @PostMapping("/challenge/7")
