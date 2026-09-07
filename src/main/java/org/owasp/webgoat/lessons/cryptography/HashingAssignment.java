@@ -16,8 +16,8 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HashingAssignment implements AssignmentEndpoint {
   public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
 
-  @RequestMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getMd5(HttpServletRequest request) throws NoSuchAlgorithmException {
 
@@ -46,7 +46,7 @@ public class HashingAssignment implements AssignmentEndpoint {
     return md5Hash;
   }
 
-  @RequestMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
+  @GetMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getSha256(HttpServletRequest request) throws NoSuchAlgorithmException {
 

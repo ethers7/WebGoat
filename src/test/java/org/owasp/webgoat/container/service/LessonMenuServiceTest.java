@@ -84,4 +84,11 @@ public class LessonMenuServiceTest {
         .andExpect(status().isOk()) // .andDo(print())
         .andExpect(jsonPath("$[0].children[0].complete", CoreMatchers.is(true)));
   }
+
+  @Test
+  void menuShouldOnlyBeAvailableThroughGet() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.post(URL_LESSONMENU_MVC))
+        .andExpect(status().isMethodNotAllowed());
+  }
 }
