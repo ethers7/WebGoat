@@ -19,6 +19,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.impl.TextCodec;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.Instant;
@@ -107,7 +108,8 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
   }
 
   @GetMapping("/JWT/votings/login")
-  public void login(@RequestParam("user") String user, HttpServletResponse response) {
+  public void login(
+      @RequestParam("user") String user, HttpServletRequest request, HttpServletResponse response) {
     if (validUsers.contains(user)) {
       Claims claims = Jwts.claims().setIssuedAt(Date.from(Instant.now().plus(Duration.ofDays(10))));
       claims.put("admin", "false");
@@ -118,11 +120,21 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
               .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
               .compact();
       Cookie cookie = new Cookie("access_token", token);
+      // Only send the token cookie over HTTPS. WebGoat can also be started on plain HTTP
+      // (server.ssl.enabled=false), where browsers reject a Secure cookie, so the flag follows
+      // the transport of the current request instead of being hardcoded.
+      if (request.isSecure()) {
+        cookie.setSecure(true);
+      }
       response.addCookie(cookie);
       response.setStatus(HttpStatus.OK.value());
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     } else {
       Cookie cookie = new Cookie("access_token", "");
+      // Same as above: Secure is set only when the request itself is served over HTTPS.
+      if (request.isSecure()) {
+        cookie.setSecure(true);
+      }
       response.addCookie(cookie);
       response.setStatus(HttpStatus.UNAUTHORIZED.value());
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);

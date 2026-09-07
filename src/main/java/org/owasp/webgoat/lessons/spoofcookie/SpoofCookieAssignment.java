@@ -9,6 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.inform
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
@@ -54,9 +55,15 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
   }
 
   @GetMapping(path = "/SpoofCookie/cleanup")
-  public void cleanup(HttpServletResponse response) {
+  public void cleanup(HttpServletRequest request, HttpServletResponse response) {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
+    // Mirror the transport of the current request: WebGoat can be served over plain HTTP
+    // (server.ssl.enabled=false), where a Secure cookie is rejected and the cookie would never
+    // be erased, so the flag is only set for HTTPS requests.
+    if (request.isSecure()) {
+      cookie.setSecure(true);
+    }
     response.addCookie(cookie);
   }
 
